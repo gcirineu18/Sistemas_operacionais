@@ -14,7 +14,6 @@ pid_t last_child_pid = 0; // Armazena PID do último processo filho
 
 void parse_command(char *input, char **args, int *background) {
 
-
     char* token = strtok(input, " ");
     int i = 0;
     while(token != NULL && i < MAX_ARGS - 1){
@@ -28,14 +27,15 @@ void parse_command(char *input, char **args, int *background) {
         args[i-1] = NULL;
     }
     else{
+        *background = 0; 
         args[i] = NULL;
     }
 
 }
 void execute_command(char **args, int background) {
     // TODO: Implementar execução
-    // Usar fork() e execvp()
     // Gerenciar background se necessário
+
     if(args[0] == NULL) return;
         
     int retval = 0;
@@ -45,6 +45,7 @@ void execute_command(char **args, int background) {
         perror("Error: ");
         exit(1);
     } 
+
     else if(!background && retval > 0 ){
         last_child_pid = retval;
         wait(0);
@@ -61,6 +62,7 @@ void execute_command(char **args, int background) {
         }
         else{
            execvp(args[0], args); 
+           return;
         }      
     }
 
@@ -83,6 +85,8 @@ void handle_internal_command(char **args) {
     if(strcmp(args[0], "pid") == 0) printf("PID pai: %d\nPID filho: %d\n",
          getpid(), last_child_pid
     );
+
+    // TODO: tratar para os outros comandos
 
 }
 
