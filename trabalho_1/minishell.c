@@ -58,7 +58,7 @@ void execute_command(char **args, int background) {
     else{
         if (execvp(args[0], args) == -1) {
             perror("Erro"); 
-            return;         
+            exit(0);
         }
         else{
            execvp(args[0], args); 
@@ -80,9 +80,13 @@ int is_internal_command(char **args) {
 
 void handle_internal_command(char **args) {
 
-    if(strcmp(args[0], "exit") == 0) exit(0);
+    // clean all processes and close mini-shell
+    if (strcmp(args[0], "exit") == 0) {
+        fflush(stdout);
+        exit(0);
+    }
 
-    if(strcmp(args[0], "pid") == 0) printf("PID pai: %d\nPID filho: %d\n",
+    if (strcmp(args[0], "pid") == 0) printf("PID pai: %d\nPID filho: %d\n",
          getpid(), last_child_pid
     );
 
