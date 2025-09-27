@@ -13,9 +13,21 @@ int bg_count = 0;
 pid_t last_child_pid = 0; // Armazena PID do último processo filho
 
 void parse_command(char *input, char **args, int *background) {
-    // TODO: Implementar parsing do comando
-    // Dividir a string em argumentos
-    // Verificar se termina com &
+
+
+    char* token = strtok(input, " ");
+    int i = 0;
+    while(token != NULL && i < MAX_ARGS - 1){
+        args[i] = token;
+        token = strtok(NULL, " ");
+        i++;
+    }
+
+    if(i > 0 && strcmp(args[i-1], "&") == 0){
+        *background = 1;
+        args[i-1] = NULL;
+    }
+
 }
 void execute_command(char **args, int background) {
     // TODO: Implementar execução
@@ -24,13 +36,23 @@ void execute_command(char **args, int background) {
 }
 
 int is_internal_command(char **args) {
-    // TODO: Verificar se é comando interno
-    // exit, pid, jobs, wait
-    return 0;
+   
+    if(args[0] == NULL) return 0;
+
+    return strcmp(args[0], "pid") == 0  ||
+           strcmp(args[0], "exit") == 0 ||  
+           strcmp(args[0], "wait") == 0 ||
+           strcmp(args[0], "jobs") == 0 ;
 }
 
 void handle_internal_command(char **args) {
-    // TODO: Executar comandos internos
+
+    if(strcmp(args[0], "exit") == 0) exit(0);
+
+    if(strcmp(args[0], "pid") == 0) printf("PID pai: %d\nPID filho: %d\n",
+        getppid(), getpid()
+    );
+
 }
 
 int main() {
