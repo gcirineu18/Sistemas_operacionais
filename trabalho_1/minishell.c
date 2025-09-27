@@ -32,40 +32,66 @@ void parse_command(char *input, char **args, int *background) {
     }
 
 }
+
+static void add_bg_process(pid_t pid) {
+    if (bg_count < 10) {
+        bg_processes[bg_count++] = pid;
+        printf("[%d] %d\n", bg_count, pid);
+        fflush(stdout);
+    } else {
+        fprintf(stderr, "Limite de processos em background atingido.\n");
+    }
+}
+
 void execute_command(char **args, int background) {
-    // TODO: Implementar execução
-    // Gerenciar background se necessário
+    if (args == NULL || args[0] == NULL) return;
 
-    if(args[0] == NULL) return;
-        
-    int retval = 0;
-    retval = fork();
+    pid_t pid = fork();
 
-    if(retval < 0){
-        perror("Error: ");
-        exit(1);
-    } 
-
-    else if(!background && retval > 0 ){
-        last_child_pid = retval;
-        wait(0);
+    if (pid < 0) {
+        perror("fork");
+        return;
     }
 
-    else if(background && retval > 0 ){
-        // TODO --> Processo em background
+    if (pid == 0) {
+        // --- Filho: substitui a imagem do processo pelo comando externo ---
+        // Dica: se seu shell tratar Ctrl+C no pai, no filho use comportamento padrão de sinais.
+        // signal(SIGINT, SIG_DFL); // opcional
+
+        execvp(args[0], args);
+
+        // Se chegou aqui, execvp falhou:
+        perror("execvp");
+        _exit(127); // 127 é código padrão para "command not found"/erro de execução
     }
 
-    else{
-        if (execvp(args[0], args) == -1) {
-            perror("Erro"); 
-            return;         
+    // --- Pai ---
+    last_child_pid = pid;
+
+    if (background) {
+        // Não bloqueia; apenas registra o processo em background
+        add_bg_process(pid);
+        // Não dá wait aqui (evita bloquear). A limpeza pode ser feita
+        // periodicamente com waitpid(..., WNOHANG) em uma função auxiliar.
+    } else {
+        int status;
+        // Foreground: espera especificamente por esse filho
+        if (waitpid(pid, &status, 0) < 0) {
+            perror("waitpid");
+            return;
         }
-        else{
-           execvp(args[0], args); 
-           return;
-        }      
-    }
 
+        // (Opcional) mensagens de término mais informativas:
+        if (WIFEXITED(status)) {
+            int code = WEXITSTATUS(status);
+            // printf("Processo %d terminou com código %d\n", pid, code);
+            (void)code;
+        } else if (WIFSIGNALED(status)) {
+            int sig = WTERMSIG(status);
+            // printf("Processo %d finalizado por sinal %d\n", pid, sig);
+            (void)sig;
+        }
+    }
 }
 
 int is_internal_command(char **args) {
