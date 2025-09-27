@@ -27,12 +27,43 @@ void parse_command(char *input, char **args, int *background) {
         *background = 1;
         args[i-1] = NULL;
     }
+    else{
+        args[i] = NULL;
+    }
 
 }
 void execute_command(char **args, int background) {
     // TODO: Implementar execução
     // Usar fork() e execvp()
     // Gerenciar background se necessário
+    if(args[0] == NULL) return;
+        
+    int retval = 0;
+    retval = fork();
+
+    if(retval < 0){
+        perror("Error: ");
+        exit(1);
+    } 
+    else if(!background && retval > 0 ){
+        last_child_pid = retval;
+        wait(0);
+    }
+
+    else if(background && retval > 0 ){
+        // TODO --> Processo em background
+    }
+
+    else{
+        if (execvp(args[0], args) == -1) {
+            perror("Erro"); 
+            return;         
+        }
+        else{
+           execvp(args[0], args); 
+        }      
+    }
+
 }
 
 int is_internal_command(char **args) {
@@ -50,7 +81,7 @@ void handle_internal_command(char **args) {
     if(strcmp(args[0], "exit") == 0) exit(0);
 
     if(strcmp(args[0], "pid") == 0) printf("PID pai: %d\nPID filho: %d\n",
-        getppid(), getpid()
+         getpid(), last_child_pid
     );
 
 }
