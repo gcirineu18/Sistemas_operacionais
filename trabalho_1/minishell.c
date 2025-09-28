@@ -13,7 +13,6 @@ int bg_count = 0;
 pid_t last_child_pid = 0; // Armazena PID do último processo filho
 
 void parse_command(char *input, char **args, int *background) {
-
     char* token = strtok(input, " ");
     int i = 0;
     while(token != NULL && i < MAX_ARGS - 1){
@@ -32,6 +31,7 @@ void parse_command(char *input, char **args, int *background) {
     }
 
 }
+
 void execute_command(char **args, int background) {
     // TODO: Implementar execução
     // Gerenciar background se necessário
@@ -155,6 +155,7 @@ int main() {
     printf("Digite 'exit' para sair\n\n");
 
     while (1) {
+        clean_finished_processes();
         printf("minishell> ");
         fflush(stdout);
         // Ler entrada do usuário
