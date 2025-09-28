@@ -78,6 +78,26 @@ int is_internal_command(char **args) {
            strcmp(args[0], "jobs") == 0 ;
 }
 
+void clean_finished_processes() {
+    int status;
+    pid_t pid;
+    // WNOHANG = não bloqueia se nenhum processo terminou
+    while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+        // Remove da lista de background
+        for (int i = 0; i < bg_count; i++) {
+            if (bg_processes[i] == pid) {
+                printf("[%d]+ Done\n", i+1);
+                // Remove elemento da lista
+                for (int j = i; j < bg_count - 1; j++) {
+                    bg_processes[j] = bg_processes[j+1];
+                }
+                bg_count--;
+                break;
+            }
+        }
+    }
+}
+
 void handle_internal_command(char **args) {
 
     // clean all processes and close mini-shell
@@ -91,6 +111,38 @@ void handle_internal_command(char **args) {
     );
 
     // TODO: tratar para os outros comandos
+
+    if (strcmp(args[0], "wait") == 0) {
+        printf("Aguardando processos em background...\n");
+        while (bg_count > 0) {
+            int status;
+            pid_t pid = wait(&status); // Bloqueia até um processo terminar
+            // Remove da lista (código similar ao clean_finished_processes)
+            for (int i = 0; i < bg_count; i++) {
+                if (bg_processes[i] == pid) {
+                    printf("[%d]+ Done\n", i+1);
+                    // Remove elemento da lista
+                    for (int j = i; j < bg_count - 1; j++) {
+                        bg_processes[j] = bg_processes[j+1];
+                    }
+                    bg_count--;
+                    break;
+                }
+            }
+        }
+        printf("Todos os processos terminaram\n");
+    }
+
+    if (strcmp(args[0], "jobs") == 0) {
+        if (bg_count == 0) {
+            printf("Nenhum processo em background\n");
+        } else {
+            printf("Processos em background:\n");
+            for (int i = 0; i < bg_count; i++) {
+                printf("[%d] %d Running\n", i+1, bg_processes[i]);
+            }
+        }
+    }
 
 }
 
