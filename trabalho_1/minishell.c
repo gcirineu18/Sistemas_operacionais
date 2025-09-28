@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <pthread.h>
 #define MAX_CMD_LEN 256
 #define MAX_ARGS 32
 
@@ -103,6 +104,7 @@ int is_internal_command(char **args) {
            strcmp(args[0], "jobs") == 0 ;
 }
 
+
 void clean_finished_processes() {
     int status;
     pid_t pid;
@@ -110,8 +112,14 @@ void clean_finished_processes() {
     while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
         // Remove da lista de background
         for (int i = 0; i < bg_count; i++) {
-            if (bg_processes[i] == pid) {
-                printf("[%d]+ Done\n", i+1);
+            if (bg_processes[i] == pid) { 
+                 
+                printf("\n[%d]+ Done\n", i+1);       
+
+                fflush(stdout);
+
+                printf("minishell> ");
+                   
                 // Remove elemento da lista
                 for (int j = i; j < bg_count - 1; j++) {
                     bg_processes[j] = bg_processes[j+1];
@@ -145,7 +153,9 @@ void handle_internal_command(char **args) {
             // Remove da lista (código similar ao clean_finished_processes)
             for (int i = 0; i < bg_count; i++) {
                 if (bg_processes[i] == pid) {
+
                     printf("[%d]+ Done\n", i+1);
+
                     // Remove elemento da lista
                     for (int j = i; j < bg_count - 1; j++) {
                         bg_processes[j] = bg_processes[j+1];
@@ -159,7 +169,7 @@ void handle_internal_command(char **args) {
     }
 
     if (strcmp(args[0], "jobs") == 0) {
-        clean_finished_processes();
+
         if (bg_count == 0) {
             printf("Nenhum processo em background\n");
         } else {
@@ -169,7 +179,15 @@ void handle_internal_command(char **args) {
             }
         }
     }
+}
 
+void* clean_checker(void* arg){
+    while(1){
+        sleep(1);
+        clean_finished_processes();
+        fflush(stdout);
+    }
+    return NULL;
 }
 
 int main() {
@@ -177,14 +195,17 @@ int main() {
     char *args[MAX_ARGS];
     int background;
 
+    pthread_t tid;
+    pthread_create(&tid, NULL, clean_checker, NULL);
+
     printf("Mini-Shell iniciado (PID: %d)\n", getpid());
     printf("Digite 'exit' para sair\n\n");
 
     while (1) {
-        clean_finished_processes();
 
         printf("minishell> ");
         fflush(stdout);
+
         // Ler entrada do usuário
         if (!fgets(input, sizeof(input), stdin)) {
             break;
@@ -192,7 +213,7 @@ int main() {
         // Remover quebra de linha
         input[strcspn(input, "\n")] = 0;
 
-        // Ignorar linhas vazias
+        // Ignorar linhas vazias   
         if (strlen(input) == 0) {
             continue;
         }
