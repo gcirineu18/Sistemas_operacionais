@@ -13,7 +13,6 @@ int bg_count = 0;
 pid_t last_child_pid = 0; // Armazena PID do último processo filho
 
 void parse_command(char *input, char **args, int *background) {
-
     char* token = strtok(input, " ");
     int i = 0;
     while(token != NULL && i < MAX_ARGS - 1){
