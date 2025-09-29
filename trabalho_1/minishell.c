@@ -7,35 +7,39 @@
 #define MAX_CMD_LEN 256
 #define MAX_ARGS 32
 
-// Array para armazenar PIDs de processos em background
-pid_t bg_processes[10];
-int bg_count = 0;
+// Variáveis globais para controle de processos em background
+pid_t bg_processes[10];  // Array para armazenar PIDs de processos em background
+int bg_count = 0;        // Contador de processos em background ativos
 pid_t last_child_pid = 0; // Armazena PID do último processo filho
 
+// Função para fazer parsing da linha de comando digitada pelo usuário
 void parse_command(char *input, char **args, int *background) {
     char* token = strtok(input, " ");
     int i = 0;
+    // Separa a entrada em tokens (argumentos)
     while(token != NULL && i < MAX_ARGS - 1){
         args[i] = token;
         token = strtok(NULL, " ");
         i++;
     }
 
+    // Verifica se o último argumento é "&" (execução em background)
     if(i > 0 && strcmp(args[i-1], "&") == 0){
-        *background = 1;
-        args[i-1] = NULL;
+        *background = 1;      // Marca como processo background
+        args[i-1] = NULL;     // Remove o "&" dos argumentos
     }
     else{
-        *background = 0; 
-        args[i] = NULL;
+        *background = 0;      // Processo foreground
+        args[i] = NULL;       // Termina array de argumentos
     }
 
 }
 
+// Adiciona um processo à lista de background
 static void add_bg_process(pid_t pid) {
     if (bg_count < 10) {
         bg_processes[bg_count++] = pid;
-        printf("[%d] %d\n", bg_count, pid);
+        printf("[%d] %d\n", bg_count, pid);  // Exibe número do job e PID
         fflush(stdout);
     } else {
         fprintf(stderr, "Limite de processos em background atingido.\n");
@@ -125,28 +129,29 @@ void clean_finished_processes() {
 
 void handle_internal_command(char **args) {
 
-    // clean all processes and close mini-shell
+    // Comando "exit": finaliza o shell
     if (strcmp(args[0], "exit") == 0) {
         fflush(stdout);
         exit(0);
     }
 
+    // Comando "pid": exibe PID do processo pai (shell) e do último filho executado
     if (strcmp(args[0], "pid") == 0) printf("PID pai: %d\nPID filho: %d\n",
          getpid(), last_child_pid
     );
 
-    // TODO: tratar para os outros comandos
-
+    // Comando "wait": aguarda todos os processos em background terminarem
     if (strcmp(args[0], "wait") == 0) {
         printf("Aguardando processos em background...\n");
+        // Loop até que todos os processos background terminem
         while (bg_count > 0) {
             int status;
             pid_t pid = wait(&status); // Bloqueia até um processo terminar
-            // Remove da lista (código similar ao clean_finished_processes)
+            // Remove o processo terminado da lista de background
             for (int i = 0; i < bg_count; i++) {
                 if (bg_processes[i] == pid) {
                     printf("[%d]+ Done\n", i+1);
-                    // Remove elemento da lista
+                    // Compacta o array removendo o elemento
                     for (int j = i; j < bg_count - 1; j++) {
                         bg_processes[j] = bg_processes[j+1];
                     }
@@ -158,12 +163,17 @@ void handle_internal_command(char **args) {
         printf("Todos os processos terminaram\n");
     }
 
+    // Comando "jobs": lista todos os processos atualmente em execução em background
     if (strcmp(args[0], "jobs") == 0) {
+        // Limpa processos que já terminaram mas ainda estão na lista
         clean_finished_processes();
+        
+        // Verifica se há processos em background para mostrar
         if (bg_count == 0) {
             printf("Nenhum processo em background\n");
         } else {
             printf("Processos em background:\n");
+            // Itera por todos os processos em background e os exibe | Formato: [número_do_job] PID Status
             for (int i = 0; i < bg_count; i++) {
                 printf("[%d] %d Running\n", i+1, bg_processes[i]);
             }
