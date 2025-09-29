@@ -49,8 +49,12 @@ static void add_bg_process(pid_t pid) {
 void execute_command(char **args, int background) {
     if (args == NULL || args[0] == NULL) return;
 
+    // Executa este método para gerar uma cópia do processo pai atual
+    // fazendo que ambos processo compartilhem o mesmo contexto por enquanto...
     pid_t pid = fork();
 
+    // Se retornar -1, significa que algum erro ocorreu, como limite de 
+    //processos, por exemplo
     if (pid < 0) {
         perror("fork");
         return;
@@ -58,13 +62,11 @@ void execute_command(char **args, int background) {
 
     if (pid == 0) {
         // --- Filho: substitui a imagem do processo pelo comando externo ---
-        // Dica: se seu shell tratar Ctrl+C no pai, no filho use comportamento padrão de sinais.
-        // signal(SIGINT, SIG_DFL); // opcional
-
         execvp(args[0], args);
 
         // Se chegou aqui, execvp falhou:
         perror("execvp");
+
         _exit(127); // 127 é código padrão para "command not found"/erro de execução
     }
 
@@ -84,16 +86,6 @@ void execute_command(char **args, int background) {
             return;
         }
 
-        // (Opcional) mensagens de término mais informativas:
-        if (WIFEXITED(status)) {
-            int code = WEXITSTATUS(status);
-            // printf("Processo %d terminou com código %d\n", pid, code);
-            (void)code;
-        } else if (WIFSIGNALED(status)) {
-            int sig = WTERMSIG(status);
-            // printf("Processo %d finalizado por sinal %d\n", pid, sig);
-            (void)sig;
-        }
     }
 }
 
@@ -101,6 +93,8 @@ int is_internal_command(char **args) {
    
     if(args[0] == NULL) return 0;
 
+    // Retorna 1 caso o primeiro argumento da entrada
+    // seja igual a um desses comandos internos
     return strcmp(args[0], "pid") == 0  ||
            strcmp(args[0], "exit") == 0 ||  
            strcmp(args[0], "wait") == 0 ||
@@ -165,7 +159,9 @@ void handle_internal_command(char **args) {
 
     // Comando "jobs": lista todos os processos atualmente em execução em background
     if (strcmp(args[0], "jobs") == 0) {
-        // Limpa processos que já terminaram mas ainda estão na lista
+        // Limpa processos que já terminaram mas ainda estão na lista.
+        // Colocamos aqui também para não correr o risco do retorno deste comando
+        // estar desatualizado
         clean_finished_processes();
         
         // Verifica se há processos em background para mostrar
