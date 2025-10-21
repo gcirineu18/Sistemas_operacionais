@@ -91,10 +91,9 @@ func novoSimulador(processos []*Processo) *Simulador {
 }
 
 // adicionarProcessosNovos verifica se há processos novos chegando neste instante, se houver um novo processo, ordena os processos que não executaram ainda pelo tempo de duracao
-
 func (s *Simulador) adicionarProcessosNovos() {
 	for _, p := range s.processos {
-		// Se o processo chegou agora
+		// Se o processo chegou agora 
 		if p.instanteCriacao == s.tempoAtual {
 			s.filaDeExecucao = append(s.filaDeExecucao, p)
 		}
@@ -104,9 +103,7 @@ func (s *Simulador) adicionarProcessosNovos() {
 	sort.Slice(s.filaDeExecucao, func(i, j int) bool {
 		return s.filaDeExecucao[i].tempoRestante < s.filaDeExecucao[j].tempoRestante
 	})
-
 }
-
 
 // verificarSeTerminou verifica se todos os processos foram finalizados
 func (s *Simulador) verificarSeTerminou() bool {
@@ -124,8 +121,8 @@ func (s *Simulador) executar() {
 	// Loop principal da simulação
 	// Continua enquanto houver processos na fila
 	// Adiciona processos que chegaram neste momento
-	s.adicionarProcessosNovos()
 	for {
+		s.adicionarProcessosNovos()
 		// Verifica se todos os processos já terminaram
 		if len(s.filaDeExecucao) == 0 && s.verificarSeTerminou() {
 			break // Todos os processos foram finalizados, podemos parar
@@ -156,6 +153,9 @@ func (s *Simulador) executar() {
 
 		// Calcula quanto tempo o processo vai executar
 		tempoExecucao := processoAtual.duracao
+		if processoAtual.tempoRestante < tempoExecucao {
+			tempoExecucao = processoAtual.tempoRestante
+		}
 
 		// Executa o processo por tempoExecucao unidades de tempo
 		for i := 0; i < tempoExecucao; i++ {
@@ -165,11 +165,22 @@ func (s *Simulador) executar() {
 
 			// Durante a execução, podem chegar novos processos
 			s.adicionarProcessosNovos()
-
+			
 			// Se o processo terminou
 			if processoAtual.tempoRestante == 0 {
 				processoAtual.tempoTermino = s.tempoAtual
 				break
+			}
+			
+			// Preempta se houver um processo com tempo restante menor chegando
+			if len(s.filaDeExecucao) > 0 && s.filaDeExecucao[0].tempoRestante < processoAtual.tempoRestante {
+				// Coloca o processo atual de volta na fila
+				s.filaDeExecucao = append(s.filaDeExecucao, processoAtual)
+				// Reordena a fila
+				sort.Slice(s.filaDeExecucao, func(i, j int) bool {
+					return s.filaDeExecucao[i].tempoRestante < s.filaDeExecucao[j].tempoRestante
+				})
+				break // Sai do loop para preemptar
 			}
 		}
 	}
