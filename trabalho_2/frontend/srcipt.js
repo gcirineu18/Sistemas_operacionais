@@ -1,8 +1,8 @@
-let endpoint = ""
+
 
 function handleOnSubmit() {
-    const quantum = document.getElementById('quantum').value;
-    const aging = document.getElementById('aging').value;
+    const quantum = Number(document.getElementById('quantum').value)  ;
+    const aging =  Number(document.getElementById('aging').value);
     
     const processData = document.getElementById('processData').value.trim();
     
@@ -22,9 +22,8 @@ function handleOnSubmit() {
         alg: algoritmo,
         quantum: quantum,
         aging: aging,
-        inputs: {
-            processo: processos
-        }
+        input: processos
+        
     };
 
     console.log('Dados JSON a ser enviado:', JSON.stringify(data, null, 2));
@@ -38,7 +37,7 @@ function getSelectedAlgorithms() {
 }
 
 function enviarDados(data) {
-    fetch(`http://localhost:8080/${endpoint}`, {
+    fetch(`http://localhost:8080/processes`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
