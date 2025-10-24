@@ -3,6 +3,7 @@
 
  type RRPE struct{
 	s *Simulador
+	aging int
  }
 
  // adicionarProcessosNovos verifica se há processos novos chegando neste instante
@@ -87,6 +88,6 @@ func (alg *RRPE) executar() {
 		}
 
 		// Aplica envelhecimento aos processos que ficaram esperando
-		alg.s.aplicarEnvelhecimento()
+		alg.s.aplicarEnvelhecimento(alg.aging)
 	}
 }

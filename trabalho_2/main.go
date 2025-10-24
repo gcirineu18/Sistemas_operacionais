@@ -36,10 +36,12 @@ type Escalonador interface{
 	adicionarProcessosNovos()
 }
 
-func novoEscalonador(tipo string, s *Simulador) (Escalonador, error) {
+// Dependendo do tipo escolhido, cria o escalonador e simulador correspondente
+// detalhe para o rrpe que também passamos o valor do aging
+func novoEscalonador(tipo string, s *Simulador, aging int) (Escalonador, error) {
     switch tipo{
 	case "rrpe":
-		return &RRPE{s}, nil
+		return &RRPE{s, aging}, nil
 	case "srtf":
 		return &SRTF{s}, nil
 	case "rr":
@@ -53,7 +55,7 @@ func novoEscalonador(tipo string, s *Simulador) (Escalonador, error) {
 	case "pcpp":
 		return &PCPP{s}, nil		
 	default:
-		return  nil, fmt.Errorf("Algoritimo inválido.")	
+		return  nil, fmt.Errorf("algoritimo inválido")	
 	}
 }
 
@@ -90,7 +92,7 @@ func lerEntradas(body ContextBody) ([]*Processo, error) {
 	}
 
 	if(processos== nil){
-		fmt.Errorf("Arquivo vazio")
+		return nil, fmt.Errorf("arquivo vazio")
 	}
 
 	// Ordena os processos por instante de criação
@@ -125,11 +127,11 @@ func (s *Simulador) ordenarFilaPorPrioridade() {
 
 // aplicarEnvelhecimento aumenta a prioridade dos processos que estão esperando
 // A cada quantum de espera, a prioridade aumenta em 1 (número maior = mais prioritário)
-func (s *Simulador) aplicarEnvelhecimento() {
+func (s *Simulador) aplicarEnvelhecimento(aging int) {
 	for _, p := range s.filaDeExecucao {
 		p.quantunsEsperando++
 		// A cada quantum esperando, aumenta o número da prioridade
-		p.prioridadeAtual++
+		p.prioridadeAtual += aging
 	}
 }
 
@@ -222,17 +224,22 @@ func processScheduler(body ContextBody) (float64, float64, int, [][]string){
 
 	algoritmo := body.Alg
 	quantum := body.Quantum
-	//aging:= body.Aging
+	aging:= body.Aging
 
 	// Lê os processos do arquivo
 	processos, err := lerEntradas(body)
 	if err != nil {
-		fmt.Errorf("Erro ao ler entradas: %v\n", err)
+		return 0, 0, 0, nil
 	}
 
 	// Cria e executa o simulador
 	simulador := novoSimulador(processos, quantum)
-	scheduler, err:= novoEscalonador(algoritmo, simulador)
+	scheduler, err:= novoEscalonador(algoritmo, simulador, aging)
+
+	if err != nil {
+		fmt.Printf("Erro ao criar escalonador: %v\n", err)
+		return 0, 0, 0, nil
+	}
 
 	scheduler.executar()
 	return simulador.imprimirResultados()

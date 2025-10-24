@@ -16,9 +16,9 @@ type ContextBody struct{
 }
 
 type Processes struct{
-	Begin int `json:begin`
-	Duration int `json:duration`
-	Priority int `json:priority`
+	Begin int `json:"begin"`
+	Duration int `json:"duration"`
+	Priority int `json:"priority"`
 }
 
 
