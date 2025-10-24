@@ -1,8 +1,9 @@
 
+
 // Função para quando clicar no botão
 function handleOnSubmit() {
     const quantum = Number(document.getElementById('quantum').value)  ;
-    const aging =  Number(document.getElementById('aging').value);
+    const aging =  Number(document.getElementById('aging').value );
     
     const processData = document.getElementById('processData').value.trim();
     
@@ -19,7 +20,13 @@ function handleOnSubmit() {
 
     // Tratar dados do textarea
     const processos = processData.split('\n').map(line => {
-        const [begin, duration, priority] = line.split(' ').map(Number);
+        const [begin, duration, priority] = line.split(' ')
+        .map(v =>{ 
+            console.log("-----------")
+            if( isNaN(v) || v === '' || v== null || v == undefined) return -1
+            return Number(v)
+         } )
+
         return { begin, duration, priority };
     });
 
@@ -42,7 +49,6 @@ function handleOnSubmit() {
         quantum: quantum,
         aging: aging,
         input: processos
-        
     };
 
     // Verificar se os dados foram capturados corretamente
@@ -59,19 +65,28 @@ function getSelectedAlgorithms() {
 
 // Requisição para endpoint com dados processados anteriormente
 function enviarDados(data) {
-    fetch(`http://localhost:8080/processes`, {
+    fetch(`http://localhost:8081/processes`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
         },
         body: JSON.stringify(data)
     })
-    .then(response => response.json())
-    .then(result => {
-        exibirResultados(result);
+    
+    .then(response => {
+        if(response.ok) return response.json()
+        return response.json().then(response => {throw new Error(response.error, response.process)})    
     })
-    .catch(error => {
-        console.error('Erro ao enviar os dados:', error);
+    .then(result => {
+        exibirResultados(result);      
+    })
+    .catch((error) => {
+       
+        Swal.fire({
+            icon: 'error',
+            title: 'Erro ao enviar dados',
+            text: `${error.message}`
+        }) 
     });
 }
 
@@ -90,7 +105,7 @@ function exibirResultados(result) {
     const numProcessos = result.diagramaTempo[0].length;
     let header = ' '.padStart(6);
     for (let i = 0; i < numProcessos; i++) {
-        header += `P${i+1} `;
+        header += result.ordemProcessos[i];
     }
 
     timeDiagram += `${header}\n`

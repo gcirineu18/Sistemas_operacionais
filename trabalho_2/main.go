@@ -62,7 +62,6 @@ func novoEscalonador(tipo string, s *Simulador, aging int) (Escalonador, error) 
 // lerArquivo lê o arquivo de entrada e cria os processos
 func lerEntradas(body ContextBody) ([]*Processo, error) {
 	
-
 	var processos []*Processo
 
 	id := 1
@@ -190,37 +189,18 @@ func (s *Simulador) calcularEstatisticas() (float64, float64) {
 }
 
 // imprimirResultados exibe todos os resultados da simulação
-func (s *Simulador) imprimirResultados() (float64, float64, int, [][]string){
+func (s *Simulador) imprimirResultados() (float64, float64, int, [][]string, []string){
 	tempoMedioVida, tempoMedioEspera := s.calcularEstatisticas()
 
-	fmt.Printf("Tempo médio de vida (turnaround): %.2f\n", tempoMedioVida)
-	fmt.Printf("Tempo médio de espera: %.2f\n", tempoMedioEspera)
-	fmt.Printf("Número de trocas de contexto: %d\n", s.trocasContexto)
-	fmt.Println("\nDiagrama de tempo:")
-
-
-	// Cabeçalho do diagrama
-	fmt.Print("tempo ")
-	for _, p := range s.processos {
-		fmt.Printf("P%d ", p.id)
-	}
-	fmt.Println()
-
-	// Linhas do diagrama
-	
-	for i, linha := range s.diagramaTempo {
-
-		fmt.Printf("%2d-%2d ", i, i+1)
-		for _, estado := range linha {
-			fmt.Printf("%s ", estado)
-		}
-		fmt.Println()
+	ordemProcess := make([]string, len(s.processos))
+	for i, p := range s.processos {
+		ordemProcess[i] =  fmt.Sprintf("P%d ", p.id)
 	}
 
-	return tempoMedioVida, tempoMedioEspera, s.trocasContexto, s.diagramaTempo
+	return tempoMedioVida, tempoMedioEspera, s.trocasContexto, s.diagramaTempo, ordemProcess
 }
 
-func processScheduler(body ContextBody) (float64, float64, int, [][]string){
+func processScheduler(body ContextBody) (float64, float64, int, [][]string, []string){
 
 	algoritmo := body.Alg
 	quantum := body.Quantum
@@ -229,7 +209,7 @@ func processScheduler(body ContextBody) (float64, float64, int, [][]string){
 	// Lê os processos do arquivo
 	processos, err := lerEntradas(body)
 	if err != nil {
-		return 0, 0, 0, nil
+		return 0, 0, 0, nil, nil
 	}
 
 	// Cria e executa o simulador
@@ -238,7 +218,7 @@ func processScheduler(body ContextBody) (float64, float64, int, [][]string){
 
 	if err != nil {
 		fmt.Printf("Erro ao criar escalonador: %v\n", err)
-		return 0, 0, 0, nil
+		return 0, 0, 0, nil,nil
 	}
 
 	scheduler.executar()

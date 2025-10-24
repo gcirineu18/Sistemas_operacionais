@@ -4,7 +4,7 @@
 
 body {
   font-family: 'Courier New', Arial, sans-serif;
-  background-color: black;
+  background-color: rgb(36, 57, 32);
   color: white;
 }
 
@@ -60,7 +60,7 @@ h3, h4 {
 button {
     margin-top: 1rem;
     padding: 1rem 2rem;
-    background-color: #4CAF50;
+    background-color: #2d8f64;
     color: white;
     font-size: 1.5rem;
     border: none;
@@ -69,7 +69,7 @@ button {
 }
 
 button:hover {
-  background-color: #2c7830;
+  background-color: #6fad72;
 }
 
 #results {

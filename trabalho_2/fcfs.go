@@ -13,6 +13,7 @@ type FCFS struct{
 func(alg *FCFS) adicionarProcessosNovos(){
 	for _, p := range alg.s.processos{
 		// Se o processo chegou agora
+				
 		if p.instanteCriacao == alg.s.tempoAtual{
 			alg.s.filaDeExecucao = append(alg.s.filaDeExecucao, p)
 		}
@@ -25,30 +26,29 @@ func(alg *FCFS) adicionarProcessosNovos(){
 		} else if a.instanteCriacao > b.instanteCriacao{
 			return 1
 		} else{
-			if a.duracao <  b.duracao{
+			if a.tempoRestante <  b.tempoRestante{
 			return -1
-			} else if a.duracao >  b.duracao{
+			} else if a.tempoRestante >  b.tempoRestante{
 				return 1
 			} else{
 				return 0
-		}	
+			}	
 		}
-
 	})
-	
 }
 
 func (alg *FCFS) executar(){
 // Loop principal da simulação
 	// Continua enquanto houver processos na fila
 	// Adiciona processos que chegaram neste momento
-	alg.adicionarProcessosNovos()
+	
 	for {
+		alg.adicionarProcessosNovos()
 		// Verifica se todos os processos já terminaram
 		if len(alg.s.filaDeExecucao) == 0 && alg.s.verificarSeTerminou() {
 			break // Todos os processos foram finalizados, podemos parar
 		}
-
+		
 		// Se não há processos na fila, mas ainda há processos pendentes, avança o tempo
 		if len(alg.s.filaDeExecucao) == 0 {
 			// Registra tempo ocioso no diagrama
@@ -56,6 +56,7 @@ func (alg *FCFS) executar(){
 			alg.s.tempoAtual++
 			continue
 		}
+
 
 		// Pega o primeiro processo da fila
 		processoAtual := alg.s.filaDeExecucao[0]
@@ -80,6 +81,7 @@ func (alg *FCFS) executar(){
 			alg.s.registrarDiagrama(processoAtual)
 			alg.s.tempoAtual++
 			processoAtual.tempoRestante--
+
 
 			// Durante a execução, podem chegar novos processos
 			alg.adicionarProcessosNovos()
