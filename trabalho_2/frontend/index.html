@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Escalonador</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="styles.css">
+        <script src="srcipt.js"></script>
+    </head>
+    <body>
+        <div class="intro">
+            <h1>Escalonador de Processos</h1>
+            <hr>
+        </div>
+        <div class="settings">
+            <div class="time-params">
+                <h3>Configurações</h3>
+                <div>
+                    <label for="quantum">Quantum:</label>
+                    <input type="number" id="quantum" min="1" required>
+                </div>
+                <div>
+                    <label for="aging">Aging:</label>
+                    <input type="number" id="aging" min="1" required>
+                </div>
+                <div class="process-inputs">
+                    <label for="processData"><h3>Dados dos Processos:</h3></label>
+                    <p>Para os dados dos processos siga o seguinte exemplo:
+                        <br>
+                        <br> 0 5 1 - <em>Processo inicia no tempo 0, com duração 5 e prioridade 1</em>
+                        <br> 0 6 2 - <em>Processo inicia no tempo 0, com duração 6 e prioridade 2</em>
+                        <br> 2 2 3 - <em>Processo inicia no tempo 2, com duração 2 e prioridade 3</em>
+                    </p>
+                    <textarea id="processData" rows="10" cols="30" placeholder="0 5 1&#10;0 6 2&#10;2 2 3"></textarea>
+                </div>
+            </div>
+            <div class="algorithms">
+                <h3>Algoritmos</h3>
+                <div class="options">
+                    FCFS (First Come First Served)
+                    <input type="radio" id="fcfs" name="alg" value="fcfs">
+                </div>
+                <div class="options">
+                    Shortest Job First
+                    <input type="radio" id="sjf" name="alg" value="sjf">
+                </div>
+                <div class="options">
+                    Shortest Remaining Time First
+                    <input type="radio" id="srtf" name="alg" value="srtf">
+                </div>
+                <div class="options"> 
+                    Round-Robin com Prioridade e Envelhecimento
+                    <input type="radio" id="rrpe" name="alg" value="rrpe">
+                </div>
+                <div class="options">
+                    Round-Robin
+                    <input type="radio" id="rr" name="alg" value="rr">    
+                </div>
+                <div class="options">
+                    Por Prioridade - Sem Preempção
+                    <input type="radio" id="psp" name="alg" value="psp">
+                </div>
+                <div class="options">
+                    Por Prioridade - Com Preempção por Prioridade
+                    <input type="radio" id="pcpp" name="alg" value="pcpp">
+                </div>
+            </div>
+        </div>
+        <div class="submit">
+            <button id="submitButton" onclick="handleOnSubmit()">Simular</button>
+        </div>
+        
+        <div id="results">
+            <h3>Resultados da Simulação:</h3>
+            <p id="avgTurnaround">Tempo médio de vida (turnaround): </p>
+            <p id="avgWait">Tempo médio de espera: </p>
+            <p id="contextSwitches">Número de trocas de contexto: </p>
+
+            <h4>Diagrama de Tempo:</h4>
+            <pre id="timeDiagram"></pre>
+        </div>
+    </body>
+</html>

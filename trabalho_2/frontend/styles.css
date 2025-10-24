@@ -1,0 +1,74 @@
+body {
+  font-family: Arial, sans-serif;
+}
+
+h3, h4 {
+  margin-top: 20px;
+}
+
+.settings {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.time-params {
+    display: flex;
+    flex-direction: column;
+}
+
+.time-params input {
+    margin: 1rem;
+}
+
+.process-inputs {
+    display: flex;
+    flex-direction: column;
+}
+.process-inputs h3 {
+    margin-bottom: 10px;
+}
+
+.process-inputs p em {
+    font-size: 0.85rem;
+}
+
+.algorithms {
+    display: flex;
+    flex-direction: column;
+}
+
+.options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+}
+
+.options input {
+    margin-left: 1rem;
+}
+
+.submit {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+button {
+  padding: 1rem 2rem;
+  background-color: #4CAF50;
+  color: white;
+  font-size: 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #45a049;
+}
+
+#results {
+    display: none;
+}
