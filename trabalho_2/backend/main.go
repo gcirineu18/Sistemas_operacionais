@@ -1,12 +1,9 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
-	"os"
 	"sort"
 	"strconv"
-	"strings"
 )
 
 // Processo representa uma tarefa a ser executada
@@ -38,10 +35,12 @@ type Escalonador interface{
 	adicionarProcessosNovos()
 }
 
-func novoEscalonador(tipo string, s *Simulador) (Escalonador, error) {
+// Dependendo do tipo escolhido, cria o escalonador e simulador correspondente
+// detalhe para o rrpe que também passamos o valor do aging
+func novoEscalonador(tipo string, s *Simulador, aging int) (Escalonador, error) {
     switch tipo{
 	case "rrpe":
-		return &RRPE{s}, nil
+		return &RRPE{s, aging}, nil
 	case "srtf":
 		return &SRTF{s}, nil
 	case "rr":
@@ -55,39 +54,24 @@ func novoEscalonador(tipo string, s *Simulador) (Escalonador, error) {
 	case "pcpp":
 		return &PCPP{s}, nil		
 	default:
-		return  nil, fmt.Errorf("Algoritimo inválido.")	
+		return  nil, fmt.Errorf("algoritimo inválido")	
 	}
 }
 
 // lerArquivo lê o arquivo de entrada e cria os processos
-func lerArquivo(nomeArquivo string) ([]*Processo, error) {
-	arquivo, err := os.Open(nomeArquivo)
-	if err != nil {
-		return nil, fmt.Errorf("erro ao abrir arquivo: %v", err)
-	}
-	defer arquivo.Close()
-
+func lerEntradas(body ContextBody) ([]*Processo, error) {
+	
 	var processos []*Processo
-	scanner := bufio.NewScanner(arquivo)
+
 	id := 1
 
 	// Lê linha por linha do arquivo
-	for scanner.Scan() {
-		linha := strings.TrimSpace(scanner.Text())
-		if linha == "" {
-			continue // Ignora linhas vazias
-		}
-
-		// Separa os valores da linha por espaços
-		campos := strings.Fields(linha)
-		if len(campos) != 3 {
-			return nil, fmt.Errorf("formato inválido na linha: %s", linha)
-		}
+	for i := range body.Input {
 
 		// Converte as strings para números inteiros
-		instanteCriacao, _ := strconv.Atoi(campos[0])
-		duracao, _ := strconv.Atoi(campos[1])
-		prioridade, _ := strconv.Atoi(campos[2])
+		instanteCriacao:= body.Input[i].Begin
+		duracao:= body.Input[i].Duration
+		prioridade:= body.Input[i].Priority 
 
 		// Cria um novo processo com os dados lidos
 		processo := &Processo{
@@ -106,8 +90,7 @@ func lerArquivo(nomeArquivo string) ([]*Processo, error) {
 	}
 
 	if(processos== nil){
-		fmt.Println("Arquivo vazio")
-		os.Exit(0)
+		return nil, fmt.Errorf("arquivo vazio")
 	}
 
 	// Ordena os processos por instante de criação
@@ -115,7 +98,7 @@ func lerArquivo(nomeArquivo string) ([]*Processo, error) {
 		return processos[i].instanteCriacao < processos[j].instanteCriacao
 	})
 
-	return processos, scanner.Err()
+	return processos, nil
 }
 
 // novoSimulador cria um novo simulador com os processos e quantum fornecidos
@@ -142,11 +125,11 @@ func (s *Simulador) ordenarFilaPorPrioridade() {
 
 // aplicarEnvelhecimento aumenta a prioridade dos processos que estão esperando
 // A cada quantum de espera, a prioridade aumenta em 1 (número maior = mais prioritário)
-func (s *Simulador) aplicarEnvelhecimento() {
+func (s *Simulador) aplicarEnvelhecimento(aging int) {
 	for _, p := range s.filaDeExecucao {
 		p.quantunsEsperando++
 		// A cada quantum esperando, aumenta o número da prioridade
-		p.prioridadeAtual++
+		p.prioridadeAtual += aging
 	}
 }
 
@@ -200,76 +183,52 @@ func (s *Simulador) calcularEstatisticas() (float64, float64) {
 		}
 	}
 
+	
 	numProcessos := float64(len(s.processos))
-	return somaTempoVida / numProcessos, somaTempoEspera / numProcessos
+
+	turnAround:= fmt.Sprintf("%.2f",somaTempoVida / numProcessos)
+	wait := fmt.Sprintf("%.2f",somaTempoEspera / numProcessos)
+
+	tt, _ := strconv.ParseFloat(turnAround, 64)
+	wt, _ := strconv.ParseFloat(wait, 64)
+
+	return tt , wt
 }
 
 // imprimirResultados exibe todos os resultados da simulação
-func (s *Simulador) imprimirResultados() {
+func (s *Simulador) imprimirResultados() (float64, float64, int, [][]string, []string){
 	tempoMedioVida, tempoMedioEspera := s.calcularEstatisticas()
 
-	fmt.Printf("Tempo médio de vida (turnaround): %.2f\n", tempoMedioVida)
-	fmt.Printf("Tempo médio de espera: %.2f\n", tempoMedioEspera)
-	fmt.Printf("Número de trocas de contexto: %d\n", s.trocasContexto)
-	fmt.Println("\nDiagrama de tempo:")
-
-	// Cabeçalho do diagrama
-	fmt.Print("tempo ")
-	for _, p := range s.processos {
-		fmt.Printf("P%d ", p.id)
+	ordemProcess := make([]string, len(s.processos))
+	for i, p := range s.processos {
+		ordemProcess[i] =  fmt.Sprintf("P%d ", p.id)
 	}
-	fmt.Println()
 
-	// Linhas do diagrama
-	for i, linha := range s.diagramaTempo {
-		fmt.Printf("%2d-%2d ", i, i+1)
-		for _, estado := range linha {
-			fmt.Printf("%s ", estado)
-		}
-		fmt.Println()
-	}
+	return tempoMedioVida, tempoMedioEspera, s.trocasContexto, s.diagramaTempo, ordemProcess
 }
 
-func main() {
-	// Verifica se os argumentos foram fornecidos
+func processScheduler(body ContextBody) (float64, float64, int, [][]string, []string){
 
-	fmt.Println("===================================")
-	fmt.Println("        OS Scheduler Menu          ")
-	fmt.Println("===================================")
-	fmt.Println("fcfs - First Come First Served")
-	fmt.Println("sjf - Shortest Job First")
-	fmt.Println("srtf - Shortest Remaining Time First")
-	fmt.Println("psp - Por prioridade, sem preempção")
-	fmt.Println("pcpp - Por prioridade, com preempção por prioridade")
-	fmt.Println("rr - Round-Robin com quantum, sem prioridade")
-	fmt.Println("rrpe - Round-Robin com prioridade e envelhecimento")
-	fmt.Println("-----------------------------------")
-
-	if len(os.Args) < 3 {
-		fmt.Println("Uso: go run . <arquivo_entrada> <nome-do-algoritmo>")
-		fmt.Println("Exemplo: go run . processos.txt fcfs")
-		os.Exit(1)
-	}
-
-	nomeArquivo := os.Args[1]
-	algoritmo := os.Args[2]
-	quantum := 2
+	algoritmo := body.Alg
+	quantum := body.Quantum
+	aging:= body.Aging
 
 	// Lê os processos do arquivo
-	processos, err := lerArquivo(nomeArquivo)
+	processos, err := lerEntradas(body)
 	if err != nil {
-		fmt.Printf("Erro ao ler arquivo: %v\n", err)
-		os.Exit(1)
+		return 0, 0, 0, nil, nil
 	}
 
 	// Cria e executa o simulador
 	simulador := novoSimulador(processos, quantum)
-	scheduler, err:= novoEscalonador(algoritmo, simulador)
-	if(err!= nil){
-		fmt.Printf("%v\n", err)
-		os.Exit(1)
+	scheduler, err:= novoEscalonador(algoritmo, simulador, aging)
+
+	if err != nil {
+		fmt.Printf("Erro ao criar escalonador: %v\n", err)
+		return 0, 0, 0, nil,nil
 	}
+
 	scheduler.executar()
-	simulador.imprimirResultados()
+	return simulador.imprimirResultados()
 }
 

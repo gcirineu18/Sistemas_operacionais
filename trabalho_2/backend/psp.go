@@ -1,37 +1,50 @@
- package main
+package main
 
 import (
-	"sort"
+	"slices"
 )
 
-type SJF struct{
+type PSP struct{
 	s *Simulador
 }
 
-// adicionarProcessosNovos verifica se há processos novos chegando neste instante, se houver um novo processo, ordena os processos que não executaram ainda pelo tempo de duracao
-func (alg *SJF) adicionarProcessosNovos() {
-	for _, p := range alg.s.processos {
+// adicionarProcessosNovos verifica se há processos novos chegando neste instante, se houver um novo processo, 
+// ordena os processos que não executaram ainda pelo tempo de duracao
+func(alg *PSP) adicionarProcessosNovos(){
+	for _, p := range alg.s.processos{
 		// Se o processo chegou agora
-		if p.instanteCriacao == alg.s.tempoAtual {
+		if p.instanteCriacao == alg.s.tempoAtual{
 			alg.s.filaDeExecucao = append(alg.s.filaDeExecucao, p)
 		}
 	}
 
-	// Ordena a fila de execução pelo tempo restante
-	sort.Slice(alg.s.filaDeExecucao, func(i, j int) bool {
-		return alg.s.filaDeExecucao[i].tempoRestante < alg.s.filaDeExecucao[j].tempoRestante
-	})
+	// Ordena a fila de execução por maior prioridade:
+	slices.SortFunc(alg.s.filaDeExecucao , func(a, b *Processo) int{
+		if a.prioridadeOriginal > b.prioridadeOriginal{
+			return -1
+		} else if a.prioridadeOriginal < b.prioridadeOriginal{
+			return 1
+		} else{
+			if a.tempoRestante <  b.tempoRestante{
+			return -1
+			} else if a.tempoRestante >  b.tempoRestante{
+				return 1
+			} else{
+				return 0
+		}	
+		}
+	})	
+	
 
 }
 
-
-// executar roda a simulação completa do escalonamento
-func (alg *SJF) executar() {
+func (alg *PSP) executar(){
 	// Loop principal da simulação
 	// Continua enquanto houver processos na fila
 	// Adiciona processos que chegaram neste momento
-	alg.adicionarProcessosNovos()
+
 	for {
+		alg.adicionarProcessosNovos()
 		// Verifica se todos os processos já terminaram
 		if len(alg.s.filaDeExecucao) == 0 && alg.s.verificarSeTerminou() {
 			break // Todos os processos foram finalizados, podemos parar
@@ -80,6 +93,3 @@ func (alg *SJF) executar() {
 		}
 	}
 }
-
-
-
