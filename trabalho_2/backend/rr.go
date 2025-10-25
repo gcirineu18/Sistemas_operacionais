@@ -1,12 +1,14 @@
  package main
 
 
- type RRPE struct{
+ type RR struct{
 	s *Simulador
  }
 
- // adicionarProcessosNovos verifica se há processos novos chegando neste instante
-func (alg *RRPE) adicionarProcessosNovos() {
+
+
+// adicionarProcessosNovos verifica se há processos novos chegando neste instante
+func (alg *RR) adicionarProcessosNovos() {
 	for _, p := range alg.s.processos {
 		// Se o processo chegou agora e ainda tem tempo restante (primeira vez na fila)
 		if p.instanteCriacao == alg.s.tempoAtual && p.tempoRestante == p.duracao {
@@ -15,30 +17,28 @@ func (alg *RRPE) adicionarProcessosNovos() {
 	}
 }
 
-
 // executar roda a simulação completa do escalonamento
-func (alg *RRPE) executar() {
+func (alg *RR) executar() {
 	// Loop principal da simulação
-	for {
-		// Adiciona processos que chegaram neste momento
-		alg.adicionarProcessosNovos()
+	// Continua enquanto houver processos na fila OU processos ainda não finalizados
+	// Adiciona processos que chegaram neste momento
 
+	for {
+		alg.adicionarProcessosNovos()
 		// Verifica se todos os processos já terminaram
 		if len(alg.s.filaDeExecucao) == 0 && alg.s.verificarSeTerminou() {
-			break // Todos os processos foram finalizados
+			break // Todos os processos foram finalizados, podemos parar
 		}
 
 		// Se não há processos na fila, mas ainda há processos pendentes, avança o tempo
 		if len(alg.s.filaDeExecucao) == 0 {
+			// Registra tempo ocioso no diagrama
 			alg.s.registrarDiagrama(nil)
 			alg.s.tempoAtual++
 			continue
 		}
 
-		// Ordena a fila por prioridade antes de escolher o próximo processo
-		alg.s.ordenarFilaPorPrioridade()
-
-		// Pega o processo de maior prioridade (primeiro da fila ordenada)
+		// Pega o primeiro processo da fila
 		processoAtual := alg.s.filaDeExecucao[0]
 		alg.s.filaDeExecucao = alg.s.filaDeExecucao[1:] // Remove da fila
 
@@ -53,10 +53,7 @@ func (alg *RRPE) executar() {
 		}
 		alg.s.processoAnterior = processoAtual
 
-		// Reseta o contador de quantums esperando (o processo vai executar agora)
-		processoAtual.quantunsEsperando = 0
-
-		// Calcula quanto tempo o processo vai executar
+		// Calcula quanto tempo o processo vai executar (quantum ou o que resta)
 		tempoExecucao := alg.s.quantum
 		if processoAtual.tempoRestante < tempoExecucao {
 			tempoExecucao = processoAtual.tempoRestante
@@ -78,15 +75,10 @@ func (alg *RRPE) executar() {
 			}
 		}
 
-		// Se o processo NÃO terminou no quantum
+		// Se o processo ainda tem tempo restante, reinsere na fila
 		if processoAtual.tempoRestante > 0 {
-			// Restaura a prioridade original
-			processoAtual.prioridadeAtual = processoAtual.prioridadeOriginal
-			// Reinsere o processo na fila
 			alg.s.filaDeExecucao = append(alg.s.filaDeExecucao, processoAtual)
 		}
-
-		// Aplica envelhecimento aos processos que ficaram esperando
-		alg.s.aplicarEnvelhecimento()
 	}
 }
+

@@ -1,29 +1,38 @@
  package main
 
+import (
+	"sort"
+)
 
- type RR struct{
+type SJF struct{
 	s *Simulador
- }
+}
 
-
-
-// adicionarProcessosNovos verifica se há processos novos chegando neste instante
-func (alg *RR) adicionarProcessosNovos() {
+// adicionarProcessosNovos verifica se há processos novos chegando neste instante, se houver um novo processo, ordena os processos que não executaram ainda pelo tempo de duracao
+func (alg *SJF) adicionarProcessosNovos() {
 	for _, p := range alg.s.processos {
-		// Se o processo chegou agora e ainda tem tempo restante (primeira vez na fila)
-		if p.instanteCriacao == alg.s.tempoAtual && p.tempoRestante == p.duracao {
+		// Se o processo chegou agora
+		if p.instanteCriacao == alg.s.tempoAtual {
 			alg.s.filaDeExecucao = append(alg.s.filaDeExecucao, p)
 		}
 	}
+
+	// Ordena a fila de execução pelo tempo restante
+	sort.Slice(alg.s.filaDeExecucao, func(i, j int) bool {
+		return alg.s.filaDeExecucao[i].tempoRestante < alg.s.filaDeExecucao[j].tempoRestante
+	})
+
 }
 
+
 // executar roda a simulação completa do escalonamento
-func (alg *RR) executar() {
+func (alg *SJF) executar() {
 	// Loop principal da simulação
-	// Continua enquanto houver processos na fila OU processos ainda não finalizados
+	// Continua enquanto houver processos na fila
 	// Adiciona processos que chegaram neste momento
-	alg.adicionarProcessosNovos()
+
 	for {
+		alg.adicionarProcessosNovos()
 		// Verifica se todos os processos já terminaram
 		if len(alg.s.filaDeExecucao) == 0 && alg.s.verificarSeTerminou() {
 			break // Todos os processos foram finalizados, podemos parar
@@ -52,11 +61,8 @@ func (alg *RR) executar() {
 		}
 		alg.s.processoAnterior = processoAtual
 
-		// Calcula quanto tempo o processo vai executar (quantum ou o que resta)
-		tempoExecucao := alg.s.quantum
-		if processoAtual.tempoRestante < tempoExecucao {
-			tempoExecucao = processoAtual.tempoRestante
-		}
+		// Calcula quanto tempo o processo vai executar
+		tempoExecucao := processoAtual.duracao
 
 		// Executa o processo por tempoExecucao unidades de tempo
 		for i := 0; i < tempoExecucao; i++ {
@@ -73,11 +79,8 @@ func (alg *RR) executar() {
 				break
 			}
 		}
-
-		// Se o processo ainda tem tempo restante, reinsere na fila
-		if processoAtual.tempoRestante > 0 {
-			alg.s.filaDeExecucao = append(alg.s.filaDeExecucao, processoAtual)
-		}
 	}
 }
+
+
 

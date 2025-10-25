@@ -4,52 +4,51 @@ import (
 	"slices"
 )
 
-type PCPP struct{
+type FCFS struct{
 	s *Simulador
 }
 
 // adicionarProcessosNovos verifica se há processos novos chegando neste instante, se houver um novo processo, 
 // ordena os processos que não executaram ainda pelo tempo de duracao
-func(alg  PCPP) adicionarProcessosNovos(){
+func(alg *FCFS) adicionarProcessosNovos(){
 	for _, p := range alg.s.processos{
 		// Se o processo chegou agora
+				
 		if p.instanteCriacao == alg.s.tempoAtual{
 			alg.s.filaDeExecucao = append(alg.s.filaDeExecucao, p)
 		}
 	}
 
-	// Ordena a fila de execução por maior prioridade:
+	// Ordena a fila de execução por ordem de chegada:
 	slices.SortFunc(alg.s.filaDeExecucao , func(a, b *Processo) int{
-		if a.prioridadeOriginal > b.prioridadeOriginal{
+		if a.instanteCriacao < b.instanteCriacao{
 			return -1
-		} else if a.prioridadeOriginal < b.prioridadeOriginal{
+		} else if a.instanteCriacao > b.instanteCriacao{
 			return 1
 		} else{
-			if a.duracao <  b.duracao{
+			if a.tempoRestante <  b.tempoRestante{
 			return -1
-			} else if a.duracao >  b.duracao{
+			} else if a.tempoRestante >  b.tempoRestante{
 				return 1
 			} else{
 				return 0
-		}	
+			}	
 		}
-	})	
-	
-
+	})
 }
 
-func (alg  PCPP) executar(){
-	// Loop principal da simulação
+func (alg *FCFS) executar(){
+// Loop principal da simulação
 	// Continua enquanto houver processos na fila
 	// Adiciona processos que chegaram neste momento
-	alg.adicionarProcessosNovos()
+	
 	for {
-
+		alg.adicionarProcessosNovos()
 		// Verifica se todos os processos já terminaram
 		if len(alg.s.filaDeExecucao) == 0 && alg.s.verificarSeTerminou() {
 			break // Todos os processos foram finalizados, podemos parar
 		}
-
+		
 		// Se não há processos na fila, mas ainda há processos pendentes, avança o tempo
 		if len(alg.s.filaDeExecucao) == 0 {
 			// Registra tempo ocioso no diagrama
@@ -57,6 +56,7 @@ func (alg  PCPP) executar(){
 			alg.s.tempoAtual++
 			continue
 		}
+
 
 		// Pega o primeiro processo da fila
 		processoAtual := alg.s.filaDeExecucao[0]
@@ -78,22 +78,10 @@ func (alg  PCPP) executar(){
 
 		// Executa o processo por tempoExecucao unidades de tempo
 		for i := 0; i < tempoExecucao; i++ {
-			if len(alg.s.filaDeExecucao)!= 0 &&  alg.s.filaDeExecucao[0].prioridadeOriginal > processoAtual.prioridadeOriginal{
-				
-				aux := processoAtual
-				processoAtual = alg.s.filaDeExecucao[0]
-				alg.s.filaDeExecucao[0] = aux
-				processoAtual.tempoInicio = alg.s.tempoAtual
-				alg.s.processoAnterior = alg.s.filaDeExecucao[0]
-				tempoExecucao = processoAtual.duracao
-				alg.s.trocasContexto++
-				i = 0
-				
-			}
 			alg.s.registrarDiagrama(processoAtual)
 			alg.s.tempoAtual++
 			processoAtual.tempoRestante--
-	
+
 
 			// Durante a execução, podem chegar novos processos
 			alg.adicionarProcessosNovos()
