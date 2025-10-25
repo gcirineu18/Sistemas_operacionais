@@ -20,9 +20,10 @@ func (alg *RRPE) adicionarProcessosNovos() {
 // executar roda a simulação completa do escalonamento
 func (alg *RRPE) executar() {
 	// Loop principal da simulação
-	for {
-		// Adiciona processos que chegaram neste momento
+	// Adiciona processos que chegaram neste momento
 		alg.adicionarProcessosNovos()
+	for {
+		
 
 		// Verifica se todos os processos já terminaram
 		if len(alg.s.filaDeExecucao) == 0 && alg.s.verificarSeTerminou() {
@@ -33,6 +34,7 @@ func (alg *RRPE) executar() {
 		if len(alg.s.filaDeExecucao) == 0 {
 			alg.s.registrarDiagrama(nil)
 			alg.s.tempoAtual++
+			alg.adicionarProcessosNovos()
 			continue
 		}
 
