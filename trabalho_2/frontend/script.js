@@ -1,4 +1,5 @@
 
+const API_URL = import.meta.env.VITE_API_URL
 
 // Função para quando clicar no botão
 function handleOnSubmit() {
@@ -65,7 +66,7 @@ function getSelectedAlgorithms() {
 
 // Requisição para endpoint com dados processados anteriormente
 function enviarDados(data) {
-    fetch(`http://localhost:8081/processes`, {
+    fetch(`${API_URL}/processes`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'

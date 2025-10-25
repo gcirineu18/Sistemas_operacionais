@@ -3,10 +3,12 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 	"time"
-
+	"github.com/joho/godotenv"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+
 )
 
 type ContextBody struct{
@@ -25,11 +27,12 @@ type Processes struct{
 
 
 func main(){
-
+	godotenv.Load()
+	frontendURL := os.Getenv("FRONTEND_URL")
 	r:= gin.Default()
 
 	r.Use(cors.New(cors.Config{
-		AllowAllOrigins: true,
+		AllowOrigins: []string{frontendURL},
 		AllowMethods: []string{"POST"},
 		AllowHeaders: []string{"Origin", "Content-Type", "OPTIONS"},
 		ExposeHeaders: []string{"Content-Lenght"},
