@@ -1,10 +1,9 @@
 package main
 
 import (
-
 	"fmt"
 	"sort"
-
+	"strconv"
 )
 
 // Processo representa uma tarefa a ser executada
@@ -184,8 +183,16 @@ func (s *Simulador) calcularEstatisticas() (float64, float64) {
 		}
 	}
 
+	
 	numProcessos := float64(len(s.processos))
-	return somaTempoVida / numProcessos, somaTempoEspera / numProcessos
+
+	turnAround:= fmt.Sprintf("%.2f",somaTempoVida / numProcessos)
+	wait := fmt.Sprintf("%.2f",somaTempoEspera / numProcessos)
+
+	tt, _ := strconv.ParseFloat(turnAround, 64)
+	wt, _ := strconv.ParseFloat(wait, 64)
+
+	return tt , wt
 }
 
 // imprimirResultados exibe todos os resultados da simulação
