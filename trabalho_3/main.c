@@ -9,6 +9,7 @@
 
 // Cria variáveis globais
 char *memoria_fisica = NULL;
+char *memory_blocks_ids = NULL;
 int tamanho_memoria = 0;
 int bloco_id_counter = 0;
 
@@ -40,6 +41,7 @@ void first_fit_allocate(int block_id, int size) {
             // Aloca o bloco
             for (j = 0; j < size; j++) {
                 memoria_fisica[i + j] = '0' + (block_id % 10); // marcar com dígito
+                memory_blocks_ids[i + j] = '#'; // armazenar o ID do bloco
             }
             printf("Alocado bloco %d de tamanho %d na posição %d\n", block_id, size, i);
             return;
@@ -63,6 +65,7 @@ void freeid(int id) {
     for (int i = 0; i < tamanho_memoria; i++) {
         if (memoria_fisica[i] == '0' + (id % 10)) {
             memoria_fisica[i] = '.';
+            memory_blocks_ids[i] = '.';
         }
     }
     printf("Memória liberada\n");
@@ -81,6 +84,18 @@ void allocate_memory(int size, char *alg) {
     }
 }
 
+void print_repeat(char c, int n) {
+    for (int i = 0; i < n; i++) putchar(c);
+    putchar('\n');
+}
+
+void show_memory() {
+    printf("Mapa de Memória (%d bytes):\n", tamanho_memoria);
+    print_repeat('-', tamanho_memoria + 2);
+    printf("[%s]\n", memory_blocks_ids);
+    printf("[%s]\n", memoria_fisica);
+    print_repeat('-', tamanho_memoria + 2);
+}
 
 void execute_command(char **args) {
     // Comando "exit": finaliza o shell
@@ -102,13 +117,15 @@ void execute_command(char **args) {
         }
 
         memoria_fisica = malloc(tamanho_memoria * sizeof(char));
-        if (memoria_fisica == NULL) {
+        memory_blocks_ids = malloc(tamanho_memoria * sizeof(char));
+        if (memoria_fisica == NULL || memory_blocks_ids == NULL) {
             printf("Erro ao alocar memória.\n");
             return;
         }
         // Inicializa toda a memória como livre (representado por '.')
         for (int i = 0; i < tamanho_memoria; i++) {
             memoria_fisica[i] = '.';
+            memory_blocks_ids[i] = '.';
         }
         return;
     } else {
@@ -131,7 +148,7 @@ void execute_command(char **args) {
             freeid(atoi(args[1]));
             // Libera o bloco com o ID especificado
         } else if (strcmp(args[0], "show") == 0) {
-            printf("%s\n", memoria_fisica);
+            show_memory();
         } else {
             printf("Comando não reconhecido: %s\n", args[0]);
         }
