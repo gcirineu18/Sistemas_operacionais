@@ -77,11 +77,83 @@ void first_fit_allocate(int block_id, int size) {
 }
 
 void best_fit_allocate(int block_id, int size) {
+    // Implementação do algoritmo Best Fit: encontra o menor buraco que cabe o bloco
+    int best_start = -1;
+    int best_size = tamanho_memoria + 1; // Inicializa com um valor maior que qualquer buraco
 
+    int i = 0;
+    while (i < tamanho_memoria) {
+        // pular posições ocupadas até encontrar início de um buraco
+        if (i < tamanho_memoria && memoria_fisica[i] != '.') {
+            i++;
+            continue;
+        }
+        if (i >= tamanho_memoria) break;
+        int start = i;
+        int hole_size = 0;
+        while (i < tamanho_memoria && memoria_fisica[i] == '.') {
+            hole_size++;
+            i++;
+        }
+        // se o buraco acomoda o bloco e é melhor que o melhor atual, atualizar
+        if (hole_size >= size && hole_size < best_size) {
+            best_size = hole_size;
+            best_start = start;
+        }
+    }
+
+    // Se encontrou o melhor ajuste
+    if (best_start != -1) {
+        for (int j = 0; j < size; j++) {
+            memoria_fisica[best_start + j] = '0' + (block_id % 10); // marcar com dígito
+            memory_blocks_ids[best_start + j] = '#'; // armazenar o ID do bloco
+        }
+        printf("Alocado bloco %d de tamanho %d na posição %d\n", block_id, size, best_start);
+    } else {
+        // Se não encontrou espaço suficiente
+        printf("Falha ao alocar bloco %d de tamanho %d: memória insuficiente\n", block_id, size);
+        bloco_id_counter--; // Reverte o incremento do ID do bloco  
+    }
 }
 
 void worst_fit_allocate(int block_id, int size) {
+    // Implementação do algoritmo Worst Fit: encontra o maior buraco que cabe o bloco
+    int worst_start = -1;
+    int worst_size = -1; // Inicializa com um valor maior que qualquer buraco
 
+    int i = 0;
+    while (i < tamanho_memoria) {
+        // pular posições ocupadas até encontrar início de um buraco
+        if (i < tamanho_memoria && memoria_fisica[i] != '.') {
+            i++;
+            continue;
+        }
+        if (i >= tamanho_memoria) break;
+        int start = i;
+        int hole_size = 0;
+        while (i < tamanho_memoria && memoria_fisica[i] == '.') {
+            hole_size++;
+            i++;
+        }
+        // se o buraco acomoda o bloco e é melhor que o melhor atual, atualizar
+        if (hole_size >= size && hole_size > worst_size) {
+            worst_size = hole_size;
+            worst_start = start;
+        }
+    }
+
+    // Se encontrou o melhor ajuste
+    if (worst_start != -1) {
+        for (int j = 0; j < size; j++) {
+            memoria_fisica[worst_start + j] = '0' + (block_id % 10); // marcar com dígito
+            memory_blocks_ids[worst_start + j] = '#'; // armazenar o ID do bloco
+        }
+        printf("Alocado bloco %d de tamanho %d na posição %d\n", block_id, size, worst_start);
+    } else {
+        // Se não encontrou espaço suficiente
+        printf("Falha ao alocar bloco %d de tamanho %d: memória insuficiente\n", block_id, size);
+        bloco_id_counter--; // Reverte o incremento do ID do bloco  
+    }
 }
 
 void freeid(int id) {
