@@ -26,6 +26,30 @@ void parse_command(char *input, char **args) {
     args[i] = NULL;
 }
 
+void init_memory(char **args) {
+    if (args[1] == NULL) {
+        printf("Uso: init <tamanho_da_memoria>\n");
+        return;
+    }
+    tamanho_memoria = atoi(args[1]);
+    if (tamanho_memoria <= 0) {
+        printf("Tamanho da memória deve ser um número positivo.\n");
+        return;
+    }
+
+    memoria_fisica = malloc(tamanho_memoria * sizeof(char));
+    memory_blocks_ids = malloc(tamanho_memoria * sizeof(char));
+    if (memoria_fisica == NULL || memory_blocks_ids == NULL) {
+        printf("Erro ao alocar memória.\n");
+        return;
+    }
+    // Inicializa toda a memória como livre (representado por '.')
+    for (int i = 0; i < tamanho_memoria; i++) {
+        memoria_fisica[i] = '.';
+        memory_blocks_ids[i] = '.';
+    }
+}
+
 void first_fit_allocate(int block_id, int size) {
     for (int i = 0; i <= tamanho_memoria - size; i++) {
         int j;
@@ -97,6 +121,74 @@ void show_memory() {
     print_repeat('-', tamanho_memoria + 2);
 }
 
+// Exibe estatísticas e blocos ativos no formato solicitado
+void show_stats() {
+    // Estrutura temporária para armazenar blocos detectados
+    typedef struct {
+        int id;
+        int start;
+        int size;
+    } Block;
+
+    Block *blocks = malloc(tamanho_memoria * sizeof(Block));
+    int blocks_count = 0;
+    int occupied = 0;
+    int holes = 0;
+
+    // Varredura para detectar blocos alocados e buracos
+    int i = 0;
+    while (i < tamanho_memoria) {
+        if (memoria_fisica[i] == '.') {
+            // Início de um buraco (conjunto de '.').
+            int j = i;
+            while (j < tamanho_memoria && memoria_fisica[j] == '.') j++;
+            holes++;
+            i = j;
+        } else {
+            // Início de um bloco alocado (conjunto do mesmo dígito)
+            char ch = memoria_fisica[i];
+            int id = ch - '0';
+            int start = i;
+            int j = i;
+            while (j < tamanho_memoria && memoria_fisica[j] == ch) j++;
+            int size = j - i;
+            blocks[blocks_count].id = id;
+            blocks[blocks_count].start = start;
+            blocks[blocks_count].size = size;
+            blocks_count++;
+            occupied += size;
+            i = j;
+        }
+    }
+
+    // Se memória estiver totalmente ocupada ou totalmente livre, o cálculo de buracos pode precisar de ajuste:
+    // Se não houver nenhum '.' (nenhum buraco detectado acima), setar holes = 0.
+    if (occupied == tamanho_memoria) holes = 0;
+
+    // Calcular fragmentação interna (não temos metadados de pedido vs alocado -> 0)
+    int internal_frag = 0;
+
+    // Imprimir blocos ativos na mesma linha, separados por ' | '
+    printf("Blocos ativos: ");
+    for (int k = 0; k < blocks_count; k++) {
+        printf("[id=%d] @%d +%dB (usado=%dB)", blocks[k].id, blocks[k].start, blocks[k].size, blocks[k].size);
+        if (k < blocks_count - 1) printf(" | ");
+    }
+    printf("\n");
+
+    // Estatísticas
+    printf("== Estatísticas ==\n");
+    printf("Tamanho total: %d bytes\n", tamanho_memoria);
+    printf("Ocupado: %d bytes | Livre: %d bytes\n", occupied, tamanho_memoria - occupied);
+    printf("Buracos (fragmentação externa): %d\n", holes);
+    printf("Fragmentação interna: %d bytes\n", internal_frag);
+    double uso = 0.0;
+    if (tamanho_memoria > 0) uso = ((double)occupied / (double)tamanho_memoria) * 100.0;
+    printf("Uso efetivo: %.2f%%\n", uso);
+
+    free(blocks);
+}
+
 void execute_command(char **args) {
     // Comando "exit": finaliza o shell
     if (strcmp(args[0], "exit") == 0) {
@@ -106,28 +198,7 @@ void execute_command(char **args) {
 
     // Comando init X: Inicializa o vetor que simula a memória física e cria o primeiro bloco livre.
     if (strcmp(args[0], "init") == 0) {
-        if (args[1] == NULL) {
-            printf("Uso: init <tamanho_da_memoria>\n");
-            return;
-        }
-        tamanho_memoria = atoi(args[1]);
-        if (tamanho_memoria <= 0) {
-            printf("Tamanho da memória deve ser um número positivo.\n");
-            return;
-        }
-
-        memoria_fisica = malloc(tamanho_memoria * sizeof(char));
-        memory_blocks_ids = malloc(tamanho_memoria * sizeof(char));
-        if (memoria_fisica == NULL || memory_blocks_ids == NULL) {
-            printf("Erro ao alocar memória.\n");
-            return;
-        }
-        // Inicializa toda a memória como livre (representado por '.')
-        for (int i = 0; i < tamanho_memoria; i++) {
-            memoria_fisica[i] = '.';
-            memory_blocks_ids[i] = '.';
-        }
-        return;
+        init_memory(args);
     } else {
         if (memoria_fisica == NULL) {
             printf("Memória não inicializada. Use o comando 'init <tamanho_da_memoria>' primeiro.\n");
@@ -149,6 +220,8 @@ void execute_command(char **args) {
             // Libera o bloco com o ID especificado
         } else if (strcmp(args[0], "show") == 0) {
             show_memory();
+        } else if (strcmp(args[0], "stats") == 0) {
+            show_stats();
         } else {
             printf("Comando não reconhecido: %s\n", args[0]);
         }
