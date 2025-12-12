@@ -12,7 +12,14 @@ import
 type Pager struct{
 	alg string
 	trace []int
-	frame int
+	frame []int
+	evictions int 
+	pageFaults int
+}
+
+type Simulador interface {
+	executar()
+	adicionarPaginasNovas()
 }
 
 
@@ -40,11 +47,11 @@ func parseCommands() *Pager{
 		}
 	}
 
-	alg:=getAlgo(os.Args[argsMap["algo"]])
-	frame:=getFrame(os.Args[argsMap["frames"]])
-	trace:=getTrace(os.Args[argsMap["trace"]])
+	alg:= getAlgo(os.Args[argsMap["algo"]])
+	frame:= getFrame(os.Args[argsMap["frames"]])
+	trace:= getTrace(os.Args[argsMap["trace"]])
 
-	return &Pager{alg: alg, frame: frame, trace: trace}
+	return &Pager{alg: alg, frame: frame, trace: trace, evictions: 0, pageFaults: 0}
 }
 
 func getAlgo(alg string) string{
@@ -62,14 +69,14 @@ func getAlgo(alg string) string{
 }
 
 
-func getFrame(frame string) int{
+func getFrame(frame string) []int{
 
   num, err := strconv.Atoi(frame)	
   if err != nil || num <= 0 {
-	fmt.Println("O número de frames é inválido.")
+	fmt.Println("O número de frames é inválido. Deve ser maior que 0.")
 	os.Exit(1)
   }
-  return num
+  return make([]int, 0, num)
 }
 func getTrace(trace string) []int{
   file, err := os.Open(trace)
@@ -84,7 +91,7 @@ func getTrace(trace string) []int{
   scanner:= bufio.NewScanner(file)
   for scanner.Scan(){
 
-	linha := scanner.Text() // linha inteira como string
+	linha := scanner.Text()
 
     num, err := strconv.Atoi(linha)
     if err != nil {
@@ -92,9 +99,7 @@ func getTrace(trace string) []int{
         continue
     }
 
-    fmt.Printf("num: %d, tipo: %[1]T\n", num)
-
-	 pagesInput = append(pagesInput, num)
+	pagesInput = append(pagesInput, num)
 
   }
 
@@ -106,6 +111,38 @@ func getTrace(trace string) []int{
 
 }
 
+func novoSimulador(p *Pager) (Simulador, error){
+	
+	switch p.alg {
+	case "fifo": 
+	      return &FIFO{p}, nil;
+	default:
+		return nil,	fmt.Errorf("algoritimo inválido")
+	}
+}
+
+func calculaEstatisticas(pager *Pager){
+
+	taxa := float32(pager.pageFaults) * 100  / float32(len(pager.trace))
+	fmt.Println("Algoritmo: ", pager.alg)
+	fmt.Println("Frames: ", len(pager.frame))
+	fmt.Println("Referências: ", len(pager.trace))
+	fmt.Println("Faltas de página: ", pager.pageFaults)
+	fmt.Printf("Taxa de faltas: %.2f%% \n", taxa)
+	fmt.Println("Evicções: ", pager.evictions)
+	fmt.Println("Conjunto residente final:")
+	fmt.Printf("frame_ids:")
+	for i:= 0; i < len(pager.frame); i++{
+		fmt.Printf("  %d", i)
+	}
+
+	fmt.Printf("\npage_ids: ")
+	for i:= 0; i < len(pager.frame); i++{
+		fmt.Printf("  %d", pager.frame[i])
+	}
+	
+}
+
 func main(){
 
 	if len(os.Args) < 7  || len(os.Args) > 8 {
@@ -114,5 +151,19 @@ func main(){
 		os.Exit(1)
 	}
 
-	parseCommands()
+	pager := parseCommands()
+
+	sim, err:= novoSimulador(pager)
+	
+	if err != nil {
+	    log.Fatal("Erro ao instanciar o Simulador")
+	}
+
+	fmt.Println(pager.trace)
+
+	sim.executar()
+
+	calculaEstatisticas(pager)
+
+
 }
