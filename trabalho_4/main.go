@@ -1,12 +1,12 @@
 package main
 
-import
-(
-  "fmt"
-  "os"
-  "strconv"
-  "bufio"
-   "log"
+import (
+	"bufio"
+	"fmt"
+	"log"
+	"os"
+	"strconv"
+	"time"
 )
 
 type Pager struct{
@@ -78,6 +78,7 @@ func getFrame(frame string) []int{
   }
   return make([]int, 0, num)
 }
+
 func getTrace(trace string) []int{
   file, err := os.Open(trace)
 
@@ -116,6 +117,10 @@ func novoSimulador(p *Pager) (Simulador, error){
 	switch p.alg {
 	case "fifo": 
 	      return &FIFO{p}, nil;
+	case "lru":
+		  return &LRU{p}, nil;  
+	case "otimo":
+		return &Otimo{p}, nil; 	  
 	default:
 		return nil,	fmt.Errorf("algoritimo inválido")
 	}
@@ -140,11 +145,13 @@ func calculaEstatisticas(pager *Pager){
 	for i:= 0; i < len(pager.frame); i++{
 		fmt.Printf("  %d", pager.frame[i])
 	}
+	fmt.Println()
 	
 }
 
 func main(){
 
+	start:= time.Now()
 	if len(os.Args) < 7  || len(os.Args) > 8 {
 		fmt.Printf("Número de argumentos inválidos. O Padrão deve ser:\n" +
 		"go run main.go --algo <ALGO> --frames <N> --trace <arquivo> [--verbose]\n")
@@ -164,6 +171,10 @@ func main(){
 	sim.executar()
 
 	calculaEstatisticas(pager)
+
+	elapsed := time.Since(start)
+
+	fmt.Println("Tempo de execução: ", elapsed)
 
 
 }

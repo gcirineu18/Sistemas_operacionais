@@ -23,17 +23,14 @@ func (alg *FIFO) executar() {
 			if j > frameCapacity - 1{
 				j = 0
 			}
-
 			if slices.Contains(alg.p.frame, alg.p.trace[i]){
 				continue
 			} else{
-				alg.p.frame = alg.p.frame[1:] 
-				alg.p.frame = append(alg.p.frame, alg.p.trace[i])
+				alg.p.frame[j] = alg.p.trace[i]			
 				j++
 				alg.p.pageFaults++
 				alg.p.evictions++
-			}
-			
+			}		
 		}
 
 	}
