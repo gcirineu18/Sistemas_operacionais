@@ -9,6 +9,34 @@ import (
 	"time"
 )
 
+
+const(
+	fifo string = "fifo"
+	lru = "lru"
+	otimo = "otimo"
+	sc = "sc"
+	clock = "clock" 
+	nru = "nru"
+	lfu = "lfu"
+	mfu = "mfu"
+)
+
+var algName = map[string]string{
+	fifo: "FIFO",
+	lru: "LRU",
+	otimo: "Ótimo",
+	sc: "Second Chance",
+	clock: "Clock",
+	nru: "NRU",
+	lfu: "LFU",
+	mfu: "MFU" ,
+}
+
+func  String(algorithm string) string{
+	return algName[algorithm]
+}
+
+
 type Pager struct{
 	alg string
 	trace []int
@@ -120,7 +148,9 @@ func novoSimulador(p *Pager) (Simulador, error){
 	case "lru":
 		  return &LRU{p}, nil;  
 	case "otimo":
-		return &Otimo{p}, nil; 	  
+		return &Otimo{p}, nil;
+	case "sc":
+		return &SC{p}, nil	 	  
 	default:
 		return nil,	fmt.Errorf("algoritimo inválido")
 	}
@@ -129,7 +159,7 @@ func novoSimulador(p *Pager) (Simulador, error){
 func calculaEstatisticas(pager *Pager){
 
 	taxa := float32(pager.pageFaults) * 100  / float32(len(pager.trace))
-	fmt.Println("Algoritmo: ", pager.alg)
+	fmt.Println("Algoritmo: ", String(pager.alg))
 	fmt.Println("Frames: ", len(pager.frame))
 	fmt.Println("Referências: ", len(pager.trace))
 	fmt.Println("Faltas de página: ", pager.pageFaults)
@@ -154,7 +184,7 @@ func main(){
 	start:= time.Now()
 	if len(os.Args) < 7  || len(os.Args) > 8 {
 		fmt.Printf("Número de argumentos inválidos. O Padrão deve ser:\n" +
-		"go run main.go --algo <ALGO> --frames <N> --trace <arquivo> [--verbose]\n")
+		"go run . --algo <ALGO> --frames <N> --trace <arquivo> [--verbose]\n")
 		os.Exit(1)
 	}
 
