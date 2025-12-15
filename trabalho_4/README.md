@@ -101,42 +101,33 @@ Tempo de execução: 123.456µs
 
 ### Visão Geral
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                         main.go                               │
-│  ┌──────────────────────────────────────────────────────┐    │
-│  │                   Fluxo Principal                     │    │
-│  │                                                       │    │
-│  │  1. parseCommands() ──> Valida argumentos CLI        │    │
-│  │           │                                           │    │
-│  │           v                                           │    │
-│  │  2. Cria Pager{alg, trace, frame, counters}         │    │
-│  │           │                                           │    │
-│  │           v                                           │    │
-│  │  3. novoSimulador(Pager) ──> Factory Pattern         │    │
-│  │           │                                           │    │
-│  │           v                                           │    │
-│  │  4. simulador.executar() ──> Strategy Pattern        │    │
-│  │           │                                           │    │
-│  │           v                                           │    │
-│  │  5. calculaEstatisticas() ──> Exibe resultados       │    │
-│  └──────────────────────────────────────────────────────┘    │
-└──────────────────────────────────────────────────────────────┘
-                             │
-        ┌────────────────────┴────────────────────┐
-        │         Interface Simulador              │
-        │    executar() | adicionarPaginasNovas() │
-        └────────────────────┬────────────────────┘
-                             │
-        ┌────────────────────┴───────────────────────────┐
-        │                    │               │            │
-        v                    v               v            v
-  ┌──────────┐        ┌──────────┐    ┌──────────┐  ┌────────┐
-  │  FIFO    │        │   LRU    │    │  Otimo   │  │   SC   │
-  │ (fifo.go)│        │ (lru.go) │    │(otimo.go)│  │ (sc.go)│
-  └──────────┘        └──────────┘    └──────────┘  └────────┘
-  Fila circular       Lista de        Busca no      [Em dev]
-  Ponteiro j          frequência      futuro
+
+```mermaid
+flowchart TB
+    main[main.go]
+
+    main --> parse[parseCommands]
+    parse --> pager[Pager]
+    pager --> factory[novoSimulador<br/>Factory Pattern]
+    factory --> exec[simulador.executar<br/>Strategy Pattern]
+    exec --> stats[calculaEstatisticas]
+
+    subgraph Simulador Interface
+        I[Simulador<br/>+ executar]
+    end
+
+    factory --> I
+
+    I --> FIFO[FIFO<br/>fifo.go]
+    I --> LRU[LRU<br/>lru.go]
+    I --> OPT[Ótimo<br/>otimo.go]
+    I --> SC[Second Chance<br/>sc.go]
+
+    FIFO --> fifo_desc[Fila circular<br/>Ponteiro j]
+    LRU --> lru_desc[Lista / Mapa<br/>Recência]
+    OPT --> opt_desc[Lookahead<br/>no trace]
+    SC --> sc_desc[Utiliza lista circular<br/>com bit de referência]
+
 ```
 
 

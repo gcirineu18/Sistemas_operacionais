@@ -11,7 +11,7 @@ import (
 
 
 const(
-	fifo string = "fifo"
+	fifo = "fifo"
 	lru = "lru"
 	otimo = "otimo"
 	sc = "sc"
