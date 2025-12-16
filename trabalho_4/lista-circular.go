@@ -8,6 +8,7 @@ type ListaCircular struct{
 
 type No struct {
 	bitRef bool
+	bitMod bool
 	page int
 	proximo *No
 }
@@ -64,6 +65,34 @@ func (lc *ListaCircular) substituiNo(pagina int, pageToAdd int) {
 	} 
 }
 
+func (lc *ListaCircular) substituiNoNRU(pagina int, pageToAdd int) {
+	if lc.primeiro == nil {
+		return
+	}
+
+	no := lc.primeiro
+	for {
+		if no.page == pagina {
+			novoNo := &No{bitRef: true, bitMod: false, page: pageToAdd}
+			if no == lc.primeiro {
+				lc.primeiro = novoNo
+			} else if no == lc.ultimo {
+				lc.ultimo = novoNo
+			}
+
+			aux := no.proximo
+			no.proximo = novoNo
+			novoNo.proximo = aux
+			break
+		}
+
+		no = no.proximo
+		if no == lc.primeiro {
+			break
+		}
+	}
+}
+
 func (lc *ListaCircular) encontraNo(pagina int) *No{
 
 	if lc.primeiro == nil{
@@ -108,4 +137,30 @@ func (lc *ListaCircular) encontraProximaVitima(pagina int, ponteiro *No) *No{
 
 	} 
 
+}
+
+func (lc *ListaCircular) encontraProximaVitimaNRU(pagina int, ponteiro *No) *No{
+	if lc.primeiro == nil {
+		return nil
+	}
+
+	var no *No
+	if ponteiro == nil {
+		no = lc.primeiro
+	} else {
+		no = ponteiro
+	}
+
+	for {
+		// Nível 00 - Melhores candidatas a substituição
+		if !no.bitRef && !no.bitMod {
+			lc.substituiNoNRU(no.page, pagina)
+			return no.proximo
+		}
+
+		// Qualquer outro nível não é uma boa escolha pois ainda pode ser referenciada recenemente ou precisa salvar as alterações antes de ser subsituída
+		// Vamos então apenas definir o bit de referência para permitir uma nova chance.
+		no.bitRef = false
+		no = no.proximo
+	}
 }
