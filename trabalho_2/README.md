@@ -19,7 +19,7 @@ cd backend
 ```
 Compile e execute os arquivos go
 ```bash
-git run .
+go run .
 ```
 Esse comando irá baixar todas as dependências necessárias e executar o arquivo `main.go`.
 

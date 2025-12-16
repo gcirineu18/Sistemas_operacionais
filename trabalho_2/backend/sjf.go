@@ -1,4 +1,4 @@
- package main
+package main
 
 import (
 	"sort"
@@ -21,7 +21,6 @@ func (alg *SJF) adicionarProcessosNovos() {
 	sort.Slice(alg.s.filaDeExecucao, func(i, j int) bool {
 		return alg.s.filaDeExecucao[i].tempoRestante < alg.s.filaDeExecucao[j].tempoRestante
 	})
-
 }
 
 
@@ -30,9 +29,8 @@ func (alg *SJF) executar() {
 	// Loop principal da simulação
 	// Continua enquanto houver processos na fila
 	// Adiciona processos que chegaram neste momento
-
-	for {
-		alg.adicionarProcessosNovos()
+	alg.adicionarProcessosNovos()
+	for {	
 		// Verifica se todos os processos já terminaram
 		if len(alg.s.filaDeExecucao) == 0 && alg.s.verificarSeTerminou() {
 			break // Todos os processos foram finalizados, podemos parar
@@ -43,11 +41,13 @@ func (alg *SJF) executar() {
 			// Registra tempo ocioso no diagrama
 			alg.s.registrarDiagrama(nil)
 			alg.s.tempoAtual++
+			alg.adicionarProcessosNovos()
 			continue
 		}
-
+		
 		// Pega o primeiro processo da fila
 		processoAtual := alg.s.filaDeExecucao[0]
+
 		alg.s.filaDeExecucao = alg.s.filaDeExecucao[1:] // Remove da fila
 
 		// Marca quando o processo iniciou pela primeira vez
@@ -66,11 +66,12 @@ func (alg *SJF) executar() {
 
 		// Executa o processo por tempoExecucao unidades de tempo
 		for i := 0; i < tempoExecucao; i++ {
+			
 			alg.s.registrarDiagrama(processoAtual)
 			alg.s.tempoAtual++
 			processoAtual.tempoRestante--
 
-			// Durante a execução, podem chegar novos processos
+			// // Durante a execução, podem chegar novos processos
 			alg.adicionarProcessosNovos()
 
 			// Se o processo terminou

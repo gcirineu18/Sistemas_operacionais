@@ -41,9 +41,9 @@ func (alg *FCFS) executar(){
 // Loop principal da simulação
 	// Continua enquanto houver processos na fila
 	// Adiciona processos que chegaram neste momento
-	
+	alg.adicionarProcessosNovos()
 	for {
-		alg.adicionarProcessosNovos()
+		
 		// Verifica se todos os processos já terminaram
 		if len(alg.s.filaDeExecucao) == 0 && alg.s.verificarSeTerminou() {
 			break // Todos os processos foram finalizados, podemos parar
@@ -54,6 +54,7 @@ func (alg *FCFS) executar(){
 			// Registra tempo ocioso no diagrama
 			alg.s.registrarDiagrama(nil)
 			alg.s.tempoAtual++
+			alg.adicionarProcessosNovos()
 			continue
 		}
 
