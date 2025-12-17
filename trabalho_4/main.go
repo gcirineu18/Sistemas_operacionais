@@ -152,7 +152,9 @@ func novoSimulador(p *Pager) (Simulador, error){
 	case "sc":
 		return &SC{p}, nil;
 	case "nru":
-		return &NRU{p}, nil;  
+		return &NRU{p}, nil;
+	case "lfu":
+		return &LFU{p}, nil;
 	default:
 		return nil,	fmt.Errorf("algoritimo inválido")
 	}

@@ -8,8 +8,9 @@ type ListaCircular struct{
 
 type No struct {
 	bitRef bool
-	bitMod bool
+	bitMod bool 			// Usado no NRU
 	page int
+	accessCount int 		// Usado no LFU
 	proximo *No
 }
 
@@ -30,6 +31,41 @@ func (lc *ListaCircular) insereNo(bitRef bool, page int){
 	}
 	lc.tamanho++
 
+}
+
+func (lc *ListaCircular) insereNoLFU(page int){
+
+	no := &No{bitRef: true, bitMod: false, page: page, accessCount: 1}
+
+    if lc.primeiro == nil{
+		lc.primeiro = no
+		lc.ultimo = no
+		no.proximo = no		
+	} else{
+		lc.ultimo.proximo = no
+		lc.ultimo = no
+		no.proximo = lc.primeiro
+		
+	}
+	lc.tamanho++
+
+}
+
+// Incrementar acesso do FLU
+func (lc *ListaCircular) incrementarAcesso(page int) {
+	no := lc.primeiro
+
+	for {
+		if no.page == page {
+			no.accessCount++
+			break
+		}
+
+		no = no.proximo
+		if no == lc.primeiro {
+			break
+		}
+	}
 }
 
 func (lc *ListaCircular) retornaTamanho() int{
@@ -163,4 +199,40 @@ func (lc *ListaCircular) encontraProximaVitimaNRU(pagina int, ponteiro *No) *No{
 		no.bitRef = false
 		no = no.proximo
 	}
+}
+
+func (lc *ListaCircular) encontraProximaVitimaLFU(pagina int, ponteiro *No) *No{
+	if lc.primeiro == nil {
+		return nil
+	}
+
+	var no *No
+	if ponteiro == nil {
+		no = lc.primeiro
+	} else {
+		no = ponteiro
+	}
+
+	// Encontrar a página com menor número de acessos
+	var menorPage *No = nil
+	var menorCount = int(^uint(0) >> 1)
+
+	for {
+		if no.accessCount < menorCount {
+			menorCount = no.accessCount
+			menorPage = no
+		}
+
+		no = no.proximo
+		if no == lc.primeiro {
+			break
+		}
+	}
+
+	
+	if menorPage != nil {
+		lc.substituiNo(menorPage.page, pagina)
+	}
+
+	return menorPage.proximo
 }

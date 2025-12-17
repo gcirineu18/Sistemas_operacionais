@@ -123,12 +123,14 @@ flowchart TB
     I --> OPT[Ótimo<br/>otimo.go]
     I --> SC[Second Chance<br/>sc.go]
     I --> NRU[Not Recently Used<br/>nru.go]
+    I --> LFU[Least Frequently Used<br/>lfu.go]
 
     FIFO --> fifo_desc[Fila circular<br/>Ponteiro j]
     LRU --> lru_desc[Lista / Mapa<br/>Recência]
     OPT --> opt_desc[Lookahead<br/>no trace]
     SC --> sc_desc[Utiliza lista circular<br/>com bit de referência]
     NRU --> nru_desc[Utiliza lista circular<br/>com bit de referência e bit de modificação]
+    NRU --> lfu_desc[Utiliza lista circular<br/>com menor contador de acessos de toda página]
 
 ```
 
