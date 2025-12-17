@@ -51,7 +51,25 @@ func (lc *ListaCircular) insereNoLFU(page int){
 
 }
 
-// Incrementar acesso do FLU
+func (lc *ListaCircular) insereNoMFU(page int){
+
+	no := &No{bitRef: true, bitMod: false, page: page, accessCount: 0}
+
+    if lc.primeiro == nil{
+		lc.primeiro = no
+		lc.ultimo = no
+		no.proximo = no		
+	} else{
+		lc.ultimo.proximo = no
+		lc.ultimo = no
+		no.proximo = lc.primeiro
+		
+	}
+	lc.tamanho++
+
+}
+
+// Incrementar acesso do FLU e MFU
 func (lc *ListaCircular) incrementarAcesso(page int) {
 	no := lc.primeiro
 
@@ -235,4 +253,42 @@ func (lc *ListaCircular) encontraProximaVitimaLFU(pagina int, ponteiro *No) *No{
 	}
 
 	return menorPage.proximo
+}
+
+
+// A função segue a mesma lógica da MFU porém agora escolhendo a página com maior número de acessos
+func (lc *ListaCircular) encontraProximaVitimaMFU(pagina int, ponteiro *No) *No{
+	if lc.primeiro == nil {
+		return nil
+	}
+
+	var no *No
+	if ponteiro == nil {
+		no = lc.primeiro
+	} else {
+		no = ponteiro
+	}
+
+	// Encontrar a página com menor número de acessos
+	var maiorPage *No = nil
+	var maiorCount = -1
+
+	for {
+		if no.accessCount > maiorCount {
+			maiorCount = no.accessCount
+			maiorPage = no
+		}
+
+		no = no.proximo
+		if no == lc.primeiro {
+			break
+		}
+	}
+
+	
+	if maiorPage != nil {
+		lc.substituiNo(maiorPage.page, pagina)
+	}
+
+	return maiorPage.proximo
 }
