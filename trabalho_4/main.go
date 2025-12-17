@@ -32,6 +32,7 @@ var algName = map[string]string{
 	mfu: "MFU" ,
 }
 
+//Faz o mapeamento
 func  String(algorithm string) string{
 	return algName[algorithm]
 }

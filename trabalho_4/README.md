@@ -23,6 +23,16 @@ go run . --algo <ALGORITMO> --frames <N> --trace <ARQUIVO> [--verbose]
 | `--frames` | Número de frames (quadros) disponíveis na memória | `--frames 4` |
 | `--trace` | Arquivo contendo a sequência de referências de páginas (uma por linha) | `--trace entrada.trace` |
 
+### Algoritmos de entrada para a flag `--algo
+| Flag | Algoritmo |
+|------|-----------|
+| fifo | FIFO|
+| lru  | LRU |
+| otimo| Ótimo|
+|  sc  | Second Chance|
+| nru  | NRU |
+| mfu | MFU |
+|lfu | LFU |
 ### Parâmetros Opcionais
 
 | Flag | Descrição |

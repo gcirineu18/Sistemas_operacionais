@@ -1,5 +1,7 @@
 package main
 
+
+
 type ListaCircular struct{
 	primeiro *No
 	ultimo *No
@@ -32,6 +34,27 @@ func (lc *ListaCircular) insereNo(bitRef bool, page int){
 	lc.tamanho++
 
 }
+
+
+
+func (lc *ListaCircular) insereNoNRU(bitRef bool, bitMod bool, page int){
+
+	no := &No{bitRef: bitRef, bitMod: bitMod, page: page}
+
+    if lc.primeiro == nil{
+		lc.primeiro = no
+		lc.ultimo = no
+		no.proximo = no		
+	} else{
+		lc.ultimo.proximo = no
+		lc.ultimo = no
+		no.proximo = lc.primeiro
+		
+	}
+	lc.tamanho++
+
+}
+
 
 func (lc *ListaCircular) insereNoLFU(page int){
 
@@ -123,18 +146,24 @@ func (lc *ListaCircular) substituiNoNRU(pagina int, pageToAdd int) {
 	if lc.primeiro == nil {
 		return
 	}
-
+    bitMod := false
 	no := lc.primeiro
 	for {
-		if no.page == pagina {
-			novoNo := &No{bitRef: true, bitMod: false, page: pageToAdd}
-			if no == lc.primeiro {
+		if no.proximo.page == pagina {
+			// Páginas pares terão o bit mod = 1
+				if (pageToAdd % 2) == 0{
+					bitMod = true
+				} else{
+					bitMod = false
+				}
+			novoNo := &No{bitRef: true, bitMod: bitMod, page: pageToAdd}
+			if no.proximo == lc.primeiro {
 				lc.primeiro = novoNo
-			} else if no == lc.ultimo {
+			} else if no.proximo == lc.ultimo {
 				lc.ultimo = novoNo
 			}
 
-			aux := no.proximo
+			aux := no.proximo.proximo
 			no.proximo = novoNo
 			novoNo.proximo = aux
 			break
@@ -204,18 +233,35 @@ func (lc *ListaCircular) encontraProximaVitimaNRU(pagina int, ponteiro *No) *No{
 	} else {
 		no = ponteiro
 	}
+	aux := no 
+	count := 1 
 
 	for {
 		// Nível 00 - Melhores candidatas a substituição
-		if !no.bitRef && !no.bitMod {
+		
+		if !no.bitRef && !no.bitMod && count == 1 {
 			lc.substituiNoNRU(no.page, pagina)
 			return no.proximo
-		}
+		} else if !no.bitRef && no.bitMod && count == 2{
+			lc.substituiNoNRU(no.page, pagina)
+			return no.proximo
+		}	else if no.bitRef && !no.bitMod && count == 3{
+			lc.substituiNoNRU(no.page, pagina)
+			return no.proximo
+		} else if no.bitRef && no.bitMod && count == 4 {
+			lc.substituiNoNRU(no.page, pagina)
+			return no.proximo
+		}		
 
-		// Qualquer outro nível não é uma boa escolha pois ainda pode ser referenciada recenemente ou precisa salvar as alterações antes de ser subsituída
-		// Vamos então apenas definir o bit de referência para permitir uma nova chance.
 		no.bitRef = false
 		no = no.proximo
+
+		if no == aux && count < 4{
+			count++
+		} else if count == 4{
+			no = aux
+			count = 1
+		}
 	}
 }
 
