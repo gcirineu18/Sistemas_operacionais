@@ -4,6 +4,9 @@ type MFU struct {
 	p *Pager
 }
 
+// Mesma Lógica do Algoritmo LFU
+// -- A diferença entre os algoritmos está na função encontraProximaVitimaMFU em lista-circular.go
+
 func (alg *MFU) executar() {
 
 	aux := len(alg.p.trace)
@@ -23,7 +26,6 @@ func (alg *MFU) executar() {
 		} else{
 
 			if no != nil{
-				// Aumenta o acesso da página
 				listaCircular.incrementarAcesso(alg.p.trace[i])
 				continue
 			} else{

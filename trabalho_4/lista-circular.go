@@ -35,8 +35,7 @@ func (lc *ListaCircular) insereNo(bitRef bool, page int){
 
 }
 
-
-
+// Novo no de acordo com o valor do bitMod
 func (lc *ListaCircular) insereNoNRU(bitRef bool, bitMod bool, page int){
 
 	no := &No{bitRef: bitRef, bitMod: bitMod, page: page}
@@ -55,7 +54,7 @@ func (lc *ListaCircular) insereNoNRU(bitRef bool, bitMod bool, page int){
 
 }
 
-
+// Novo no de acordo com o valor do accessCount
 func (lc *ListaCircular) insereNoLFU(page int){
 
 	no := &No{bitRef: true, bitMod: false, page: page, accessCount: 1}
@@ -74,6 +73,7 @@ func (lc *ListaCircular) insereNoLFU(page int){
 
 }
 
+// Única alteração para o insereNoLFU é o valor do accessCount
 func (lc *ListaCircular) insereNoMFU(page int){
 
 	no := &No{bitRef: true, bitMod: false, page: page, accessCount: 0}
@@ -113,6 +113,7 @@ func (lc *ListaCircular) retornaTamanho() int{
 	return lc.tamanho
 }
 
+// Vai percorrer a lista para realizar a substituição pagina -> pageToAdd
 func (lc *ListaCircular) substituiNo(pagina int, pageToAdd int) {
 
 	if lc.primeiro == nil{
@@ -129,6 +130,7 @@ func (lc *ListaCircular) substituiNo(pagina int, pageToAdd int) {
 			} else if(no.proximo == lc.ultimo){
 				lc.ultimo = novoNo
 			}
+			// O novoNo é integrado e ligado ao seu no anterior e posterior
 			aux := no.proximo.proximo
 			no.proximo = novoNo
 			novoNo.proximo = aux
@@ -176,6 +178,8 @@ func (lc *ListaCircular) substituiNoNRU(pagina int, pageToAdd int) {
 	}
 }
 
+// Busca o No correspondente a pagina recebida do Pager
+// -- Essa função serve de base para as outras funções encontraNo dos demais algoritmos --
 func (lc *ListaCircular) encontraNo(pagina int) *No{
 
 	if lc.primeiro == nil{
@@ -198,6 +202,8 @@ func (lc *ListaCircular) encontraNo(pagina int) *No{
 	return nil
 }
 
+// Percorre a lista até encontrar uma página com bit de referência 0
+// As páginas com bit 1 são atualizadas para 0 como uma segunda chance
 func (lc *ListaCircular) encontraProximaVitima(pagina int, ponteiro *No) *No{
 	if lc.primeiro == nil{
 		return nil
@@ -234,28 +240,35 @@ func (lc *ListaCircular) encontraProximaVitimaNRU(pagina int, ponteiro *No) *No{
 		no = ponteiro
 	}
 	aux := no 
-	count := 1 
+	count := 1				
+	// count vai funcionar como uma variável de "prioridade" - onde 1 é a maior prioridade (Nível 00) e 4 é a menor (Nível 11)
+	// Caso o algoritmo percorreu toda a lista e ainda não encontrou uma página para substituir ele passa para o critério com menor prioridade
 
 	for {
-		// Nível 00 - Melhores candidatas a substituição
+		
 		
 		if !no.bitRef && !no.bitMod && count == 1 {
+			// Nível 00 - Melhores candidatas a substituição
 			lc.substituiNoNRU(no.page, pagina)
 			return no.proximo
 		} else if !no.bitRef && no.bitMod && count == 2{
+			// Nível 01	
 			lc.substituiNoNRU(no.page, pagina)
 			return no.proximo
 		}	else if no.bitRef && !no.bitMod && count == 3{
+			// Nível 10
 			lc.substituiNoNRU(no.page, pagina)
 			return no.proximo
 		} else if no.bitRef && no.bitMod && count == 4 {
+			// Nível 11
 			lc.substituiNoNRU(no.page, pagina)
 			return no.proximo
 		}		
 
 		no.bitRef = false
 		no = no.proximo
-
+		
+		// Toda a lista já foi percorrida, a prioridade é alterada
 		if no == aux && count < 4{
 			count++
 		} else if count == 4{
@@ -302,7 +315,7 @@ func (lc *ListaCircular) encontraProximaVitimaLFU(pagina int, ponteiro *No) *No{
 }
 
 
-// A função segue a mesma lógica da MFU porém agora escolhendo a página com maior número de acessos
+// A função segue a mesma lógica da LFU porém agora escolhendo a página com maior número de acessos
 func (lc *ListaCircular) encontraProximaVitimaMFU(pagina int, ponteiro *No) *No{
 	if lc.primeiro == nil {
 		return nil

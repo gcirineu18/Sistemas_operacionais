@@ -21,6 +21,8 @@ const(
 	mfu = "mfu"
 )
 
+// Definição das constantes de algoritmos para o print no Console
+// -- A função String faz o mapeamento de acordo com o map abaixo
 var algName = map[string]string{
 	fifo: "FIFO",
 	lru: "LRU",
@@ -32,18 +34,17 @@ var algName = map[string]string{
 	mfu: "MFU" ,
 }
 
-//Faz o mapeamento
 func  String(algorithm string) string{
 	return algName[algorithm]
 }
 
-
+// Definição da estrutura Pager
 type Pager struct{
-	alg string
-	trace []int
-	frame []int
-	evictions int 
-	pageFaults int
+	alg string 				// Algoritmo
+	trace []int				// Referências de páginas
+	frame []int				// Frames (memória) onde as páginas são armazenadas
+	evictions int 			// Número de evicções
+	pageFaults int			// Número de faltas de página
 }
 
 type Simulador interface {
@@ -58,6 +59,7 @@ func parseCommands() *Pager{
 	argsMap["frames"] = 0
 	argsMap["trace"] = 0
 
+	// Verifica os argumentos passados na linha de comando
 	for i := range len(os.Args){
 	  switch os.Args[i] {
 		case "--algo":
@@ -69,13 +71,15 @@ func parseCommands() *Pager{
 		} 		
 	}
 
+	// Verifica se todas as flags necessárias foram encontradas
 	for key, val := range argsMap{
 		if(val == 0){
 			fmt.Printf("Flag %s não encontrada, por favor, tente novamente.\n", key)
 			os.Exit(1)
 		}
 	}
-
+	
+	// Funções de Validação
 	alg:= getAlgo(os.Args[argsMap["algo"]])
 	frame:= getFrame(os.Args[argsMap["frames"]])
 	trace:= getTrace(os.Args[argsMap["trace"]])
@@ -83,6 +87,7 @@ func parseCommands() *Pager{
 	return &Pager{alg: alg, frame: frame, trace: trace, evictions: 0, pageFaults: 0}
 }
 
+// Validação - Algoritmo
 func getAlgo(alg string) string{
 	aux:= 0 
 	switch alg {
@@ -97,7 +102,7 @@ func getAlgo(alg string) string{
 	return alg	
 }
 
-
+// Validação - Frame
 func getFrame(frame string) []int{
 
   num, err := strconv.Atoi(frame)	
@@ -108,6 +113,7 @@ func getFrame(frame string) []int{
   return make([]int, 0, num)
 }
 
+// Validação - Trace
 func getTrace(trace string) []int{
   file, err := os.Open(trace)
 
@@ -123,6 +129,7 @@ func getTrace(trace string) []int{
 
 	linha := scanner.Text()
 
+	// Converte a linha para tipo int
     num, err := strconv.Atoi(linha)
     if err != nil {
         log.Printf("%v", err)
@@ -141,6 +148,7 @@ func getTrace(trace string) []int{
 
 }
 
+// Factory para Simulador de acordo com o algoritmo passado no parâmetro
 func novoSimulador(p *Pager) (Simulador, error){
 	
 	switch p.alg {
@@ -189,6 +197,8 @@ func calculaEstatisticas(pager *Pager){
 func main(){
 
 	start:= time.Now()
+
+	// Valida a quantidade de argumentos fornecidos
 	if len(os.Args) < 7  || len(os.Args) > 8 {
 		fmt.Printf("Número de argumentos inválidos. O Padrão deve ser:\n" +
 		"go run . --algo <ALGO> --frames <N> --trace <arquivo> [--verbose]\n")
@@ -197,6 +207,7 @@ func main(){
 
 	pager := parseCommands()
 
+	// Utiliza o Factory para criar o simulador
 	sim, err:= novoSimulador(pager)
 	
 	if err != nil {
@@ -205,6 +216,7 @@ func main(){
 
 	fmt.Println(pager.trace)
 
+	// Executa a simulação
 	sim.executar()
 
 	calculaEstatisticas(pager)
@@ -212,6 +224,4 @@ func main(){
 	elapsed := time.Since(start)
 
 	fmt.Println("Tempo de execução: ", elapsed)
-
-
 }
